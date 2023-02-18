@@ -9,7 +9,7 @@ import scala.collection.{immutable, mutable}
  * @tparam E type constructor for edges in graph.
  * @author Pepe Gallardo
  */
-trait Graph[V, E[_]] {
+trait Graph[V, E[_]] extends graph.traversal.Traversable[V] {
   /**
    * Adds a vertex to a graph.
    *

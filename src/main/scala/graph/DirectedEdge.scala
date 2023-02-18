@@ -34,4 +34,6 @@ object DirectedEdge {
    * @return a unweighted directed edge with given source and destination.
    */
   def apply[V](source: V, destination: V): DirectedEdge[V] = new DirectedEdge[V](source, destination)
+
+  def unapply[V](directedEdge: DirectedEdge[V]): Option[(V, V)] = Some(directedEdge.source, directedEdge.destination)
 }

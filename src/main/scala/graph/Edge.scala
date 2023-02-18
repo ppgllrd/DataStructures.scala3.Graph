@@ -35,4 +35,6 @@ object Edge {
    * @return an unweighted undirected edge with given endpoints.
    */
   def apply[V](vertex1: V, vertex2: V): Edge[V] = new Edge[V](vertex1, vertex2)
+
+  def unapply[V](edge: Edge[V]): Option[(V, V)] = Some(edge.vertex1, edge.vertex2)
 }

@@ -50,8 +50,8 @@ class MapDirectedGraph[V] extends DirectedGraph[V, DirectedEdge] {
   /**
    * Adds a directed edge to graph connecting vertex `source` to vertex `destination`.
    *
-   * @param source      source vertex of directed edge.
-   * @param destination destination vertex of directed edge.
+   * @param source      source vertex of directed edge to add.
+   * @param destination destination vertex of directed edgeto add.
    * @return `true` if directed edge was not in graph.
    */
   override def addEdge(source: V, destination: V): Boolean = ???
@@ -67,10 +67,28 @@ class MapDirectedGraph[V] extends DirectedGraph[V, DirectedEdge] {
   /**
    * Deletes a directed edge from graph.
    *
+   * @param source      source vertex of directed edge to delete.
+   * @param destination destination vertex of directed edge to delete.
+   * @return `true` if edge was in graph before.
+   */
+  def deleteEdge(source: V, destination: V): Boolean = ???
+
+  /**
+   * Deletes a directed edge from graph.
+   *
    * @param edge a directed edge to delete from graph.
    * @return `true` if directed edge was in graph.
    */
   override def deleteEdge(edge: DirectedEdge[V]): Boolean = ???
+
+  /**
+   * Checks whether a directed edge is included in graph.
+   *
+   * @param source      source vertex of directed edge.
+   * @param destination destination vertex of directed edge.
+   * @return `true` if edge is included in graph.
+   */
+  override def containsEdge(source: V, destination: V): Boolean = ???
 
   /**
    * Checks whether a directed edge is included in graph.

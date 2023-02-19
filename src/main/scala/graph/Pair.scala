@@ -3,16 +3,18 @@ package graph
 /**
  * A pair consisting of a vertex and a weight.
  *
- * @param successor vertex in pair.
- * @param weight    weight in pair.
+ * @param vertex vertex in pair.
+ * @param weight weight in pair.
  * @tparam V type of vertex.
  * @tparam W type of weight.
  */
-private[graph] case class Pair[V, W](successor: V, weight: W) {
-  // only successor component is used for determining if two Pairs are equal
+private[graph] case class Pair[V, W](vertex: V, weight: W) {
+  // only successor component is used for determining if two Pairs are equal when
+  // one any of weights is null
   override def equals(other: Any): Boolean = other match {
     case that: Pair[?, ?] =>
-      (that canEqual this) && successor == successor
+      (that canEqual this) && vertex == that.vertex &&
+        (weight == null || that.weight == null || weight == that.weight)
     case _ => false
   }
 
@@ -20,8 +22,8 @@ private[graph] case class Pair[V, W](successor: V, weight: W) {
 
   // as equals only depends on successor so has to do hashCode
   override def hashCode(): Int = {
-    successor.hashCode()
+    vertex.hashCode()
   }
 
-  override def toString: String = s"${getClass.getSimpleName}($successor, $weight)"
+  override def toString: String = s"${getClass.getSimpleName}($vertex, $weight)"
 }

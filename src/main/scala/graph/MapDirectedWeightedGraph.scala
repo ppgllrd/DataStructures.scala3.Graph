@@ -64,8 +64,8 @@ class MapDirectedWeightedGraph[V, W] extends DirectedWeightedGraph[V, W, Directe
   /**
    * Adds a directed weighted edge to graph connecting `source` to `destination`. Weight would be `null`.
    *
-   * @param source      source of directed edge.
-   * @param destination destination of directed edge.
+   * @param source      source of directed edge to add.
+   * @param destination destination of directed edge to add.
    * @return `true` if directed edge was not in graph.
    */
   override def addEdge(source: V, destination: V): Boolean = ???
@@ -73,9 +73,9 @@ class MapDirectedWeightedGraph[V, W] extends DirectedWeightedGraph[V, W, Directe
   /**
    * Adds a directed weighted edge to graph connecting `source` to `destination` with weight `weight`.
    *
-   * @param source      source of directed edge.
-   * @param destination destination of directed edge.
-   * @param weight      weight of directed edge.
+   * @param source      source of directed edge to add.
+   * @param destination destination of directed edge to add.
+   * @param weight      weight of directed edge to add.
    * @return `true` if directed edge was not in graph.
    */
   override def addEdge(source: V, destination: V, weight: W): Boolean = ???
@@ -89,12 +89,45 @@ class MapDirectedWeightedGraph[V, W] extends DirectedWeightedGraph[V, W, Directe
   override def addEdge(edge: DirectedWeightedEdge[V, W]): Boolean = ???
 
   /**
+   * Deletes a directed weighted edge from `source` to `destination` from graph.
+   *
+   * @param source      source vertex of directed edge to delete.
+   * @param destination destination vertex of directed edge to delete.
+   * @return `true` if edge was in graph before.
+   */
+  def deleteEdge(source: V, destination: V): Boolean = ???
+
+  /**
    * Deletes a directed weighted edge from graph.
    *
    * @param edge a directed weighted edge to delete from graph.
    * @return `true` if directed edge was in graph.
    */
   override def deleteEdge(edge: DirectedWeightedEdge[V, W]): Boolean = ???
+
+  /**
+   * Checks whether a directed edge is included in graph.
+   *
+   * @param source      source vertex of directed edge.
+   * @param destination destination vertex of directed edge.
+   * @return `true` if edge is included in graph.
+   */
+  override def containsEdge(source: V, destination: V): Boolean = ???
+
+  /**
+   * Returns weight of edge going form vertex `source` to vertex `destination`.
+   *
+   * @param source      source vertex of seek weighted edge.
+   * @param destination destination vertex of seek weighted edge.
+   * @return `Some(weight)` if there is and edge from vertex `vertex1` to vertex `vertex2`. `None` if there is
+   *         not such edge.
+   */
+  override def weightOfEdge(source: V, destination: V): Option[W] =
+    succsAndWeights.get(source) match
+      case None => None
+      case Some(incidents) => incidents.find(_.vertex == destination) match
+        case None => None
+        case Some(Pair(_, weight)) => Some(weight)
 
   /**
    * Checks whether a directed weighted edge is included in graph.

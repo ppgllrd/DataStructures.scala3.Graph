@@ -67,8 +67,8 @@ trait Graph[V, E[_]] extends graph.traversal.Traversable[V] {
   /**
    * Adds an edge to graph connecting `vertex1` to `vertex2`.
    *
-   * @param vertex1 one endpoint of edge.
-   * @param vertex2 another endpoint of edge.
+   * @param vertex1 one endpoint of edge to add.
+   * @param vertex2 another endpoint of edge to add.
    * @return `true` if edge was not in graph before.
    */
   def addEdge(vertex1: V, vertex2: V): Boolean
@@ -84,10 +84,28 @@ trait Graph[V, E[_]] extends graph.traversal.Traversable[V] {
   /**
    * Deletes an edge from graph.
    *
+   * @param vertex1 one endpoint of edge to delete.
+   * @param vertex2 another endpoint of edge to delete.
+   * @return `true` if edge was in graph before.
+   */
+  def deleteEdge(vertex1: V, vertex2: V): Boolean
+
+  /**
+   * Deletes an edge from graph.
+   *
    * @param edge edge to delete from graph.
    * @return `true` if edge was in graph before.
    */
   def deleteEdge(edge: E[V]): Boolean
+
+  /**
+   * Checks whether an edge is included in graph.
+   *
+   * @param vertex1 one endpoint of edge.
+   * @param vertex2 another endpoint of edge.
+   * @return `true` if edge is included in graph.
+   */
+  def containsEdge(vertex1: V, vertex2: V): Boolean
 
   /**
    * Checks whether an edge is included in graph.

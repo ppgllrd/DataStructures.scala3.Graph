@@ -33,7 +33,7 @@ class MapGraph[V] extends Graph[V, Edge] {
       case Some(incidents) =>
         succs.remove(vertex)
         for (incident <- incidents)
-          succs(incident) -= vertex
+          succs(incident).remove(vertex)
         true
 
   override def containsVertex(vertex: V): Boolean =
@@ -76,8 +76,9 @@ class MapGraph[V] extends Graph[V, Edge] {
           added
 
   override def deleteEdge(edge: Edge[V]): Boolean =
-    val vertex1 = edge.vertex1
-    val vertex2 = edge.vertex2
+    deleteEdge(edge.vertex1, edge.vertex2)
+
+  override def deleteEdge(vertex1: V, vertex2: V): Boolean =
     succs.get(vertex1) match
       case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
       case Some(incidents1) => succs.get(vertex2) match
@@ -88,9 +89,12 @@ class MapGraph[V] extends Graph[V, Edge] {
           deleted
 
   override def containsEdge(edge: Edge[V]): Boolean =
-    succs.get(edge.vertex1) match
+    containsEdge(edge.vertex1, edge.vertex2)
+
+  override def containsEdge(vertex1: V, vertex2: V): Boolean =
+    succs.get(vertex1) match
       case None => false
-      case Some(incidents) => incidents.contains(edge.vertex2)
+      case Some(incidents) => incidents.contains(vertex2)
 
   override def edges: immutable.Set[Edge[V]] =
     var set = immutable.Set[Edge[V]]()

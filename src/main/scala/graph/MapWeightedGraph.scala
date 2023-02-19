@@ -23,9 +23,9 @@ object MapWeightedGraph {
 class MapWeightedGraph[V, W] extends WeightedGraph[V, W, WeightedEdge] {
   private val succsAndWeights = mutable.Map[V, mutable.Set[Pair[V, W]]]()
 
-  override def addVertex(vertex: V): Unit = ???
+  override def addVertex(vertex: V): Boolean = ???
 
-  override def deleteVertex(vertex: V): Unit = ???
+  override def deleteVertex(vertex: V): Boolean = ???
 
   override def containsVertex(vertex: V): Boolean = ???
 
@@ -44,9 +44,9 @@ class MapWeightedGraph[V, W] extends WeightedGraph[V, W, WeightedEdge] {
    *
    * @param vertex1 one endpoint of edge.
    * @param vertex2 another endpoint of edge.
-   * @return weighted edge that was added to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(vertex1: V, vertex2: V): WeightedEdge[V, W] = ???
+  override def addEdge(vertex1: V, vertex2: V): Boolean = ???
 
   /**
    * Adds a weighted edge to graph connecting `source` to `destination` with weight `weight`.
@@ -54,23 +54,25 @@ class MapWeightedGraph[V, W] extends WeightedGraph[V, W, WeightedEdge] {
    * @param vertex1 one endpoint of edge.
    * @param vertex2 another endpoint of edge.
    * @param weight  weight if edge.
-   * @return weighted edge that was added to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(vertex1: V, vertex2: V, weight: W): WeightedEdge[V, W] = ???
+  override def addEdge(vertex1: V, vertex2: V, weight: W): Boolean = ???
 
   /**
    * Adds a weighted edge to a graph.
    *
    * @param edge weighted edge to add to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(edge: WeightedEdge[V, W]): Unit = ???
+  override def addEdge(edge: WeightedEdge[V, W]): Boolean = ???
 
   /**
    * Deletes a weighted edge from graph.
    *
    * @param edge weighted edge to delete from graph.
+   * @return `true` if directed edge was in graph.
    */
-  override def deleteEdge(edge: WeightedEdge[V, W]): Unit = ???
+  override def deleteEdge(edge: WeightedEdge[V, W]): Boolean = ???
 
   /**
    * Checks whether a weighted edge is included in graph.

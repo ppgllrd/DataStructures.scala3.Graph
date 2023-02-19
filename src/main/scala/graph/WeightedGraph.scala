@@ -11,7 +11,7 @@ import scala.collection.immutable
  * @author Pepe Gallardo
  */
 trait WeightedGraph[V, W, WE[_, _]] extends Graph[V, [X] =>> WE[X, W]] {
-  def addEdge(vertex1: V, vertex2: V, weight: W): WE[V, W]
+  def addEdge(vertex1: V, vertex2: V, weight: W): Boolean
 
   /**
    * Returns a set with all vertices that are direct successors of vertex `vertex` and weights of corresponding 

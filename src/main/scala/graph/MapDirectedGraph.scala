@@ -21,9 +21,9 @@ object MapDirectedGraph {
 class MapDirectedGraph[V] extends DirectedGraph[V, DirectedEdge] {
   private val succs = mutable.Map[V, mutable.Set[V]]()
 
-  override def addVertex(vertex: V): Unit = ???
+  override def addVertex(vertex: V): Boolean = ???
 
-  override def deleteVertex(vertex: V): Unit = ???
+  override def deleteVertex(vertex: V): Boolean = ???
 
   override def containsVertex(vertex: V): Boolean = ???
 
@@ -52,23 +52,25 @@ class MapDirectedGraph[V] extends DirectedGraph[V, DirectedEdge] {
    *
    * @param source      source vertex of directed edge.
    * @param destination destination vertex of directed edge.
-   * @return directed edge that was added to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(source: V, destination: V): DirectedEdge[V] = ???
+  override def addEdge(source: V, destination: V): Boolean = ???
 
   /**
    * Adds a directed edge to graph.
    *
    * @param edge directed edge to add to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(edge: DirectedEdge[V]): Unit = ???
+  override def addEdge(edge: DirectedEdge[V]): Boolean = ???
 
   /**
    * Deletes a directed edge from graph.
    *
    * @param edge a directed edge to delete from graph.
+   * @return `true` if directed edge was in graph.
    */
-  override def deleteEdge(edge: DirectedEdge[V]): Unit = ???
+  override def deleteEdge(edge: DirectedEdge[V]): Boolean = ???
 
   /**
    * Checks whether a directed edge is included in graph.

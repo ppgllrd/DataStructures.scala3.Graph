@@ -40,12 +40,15 @@ trait Traversal[V]:
     container.add(DirectedEdge(source, source))
     while container.nonEmpty do
       val DirectedEdge(src, dst) = container.remove()
-      if !sourceOf.contains(dst) then
+      if !visited(dst) then
         sourceOf(dst) = src
         for v <- traversable.successors(dst) do
           if !sourceOf.contains(v) then
             container.add(DirectedEdge(dst, v))
     traversed = true
+
+  private inline def visited(inline v: V): Boolean =
+    sourceOf.contains(v)
 
   /**
    * Builds a path from source of traversal to `destination` vertex.

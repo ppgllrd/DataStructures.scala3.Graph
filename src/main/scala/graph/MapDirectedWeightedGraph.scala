@@ -23,9 +23,9 @@ object MapDirectedWeightedGraph {
 class MapDirectedWeightedGraph[V, W] extends DirectedWeightedGraph[V, W, DirectedWeightedEdge] {
   private val succsAndWeights = mutable.Map[V, mutable.Set[Pair[V, W]]]()
 
-  override def addVertex(vertex: V): Unit = ???
+  override def addVertex(vertex: V): Boolean = ???
 
-  override def deleteVertex(vertex: V): Unit = ???
+  override def deleteVertex(vertex: V): Boolean = ???
 
   override def containsVertex(vertex: V): Boolean = ???
 
@@ -66,9 +66,9 @@ class MapDirectedWeightedGraph[V, W] extends DirectedWeightedGraph[V, W, Directe
    *
    * @param source      source of directed edge.
    * @param destination destination of directed edge.
-   * @return directed weighted edge that was added to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(source: V, destination: V): DirectedWeightedEdge[V, W] = ???
+  override def addEdge(source: V, destination: V): Boolean = ???
 
   /**
    * Adds a directed weighted edge to graph connecting `source` to `destination` with weight `weight`.
@@ -76,23 +76,25 @@ class MapDirectedWeightedGraph[V, W] extends DirectedWeightedGraph[V, W, Directe
    * @param source      source of directed edge.
    * @param destination destination of directed edge.
    * @param weight      weight of directed edge.
-   * @return directed weighted edge that was added to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(source: V, destination: V, weight: W): DirectedWeightedEdge[V, W] = ???
+  override def addEdge(source: V, destination: V, weight: W): Boolean = ???
 
   /**
    * Adds a directed weighted edge to graph.
    *
    * @param edge directed weighted edge to add to graph.
+   * @return `true` if directed edge was not in graph.
    */
-  override def addEdge(edge: DirectedWeightedEdge[V, W]): Unit = ???
+  override def addEdge(edge: DirectedWeightedEdge[V, W]): Boolean = ???
 
   /**
    * Deletes a directed weighted edge from graph.
    *
    * @param edge a directed weighted edge to delete from graph.
+   * @return `true` if directed edge was in graph.
    */
-  override def deleteEdge(edge: DirectedWeightedEdge[V, W]): Unit = ???
+  override def deleteEdge(edge: DirectedWeightedEdge[V, W]): Boolean = ???
 
   /**
    * Checks whether a directed weighted edge is included in graph.

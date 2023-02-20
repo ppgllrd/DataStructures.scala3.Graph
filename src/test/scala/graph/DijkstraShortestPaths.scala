@@ -30,4 +30,5 @@ object DijkstraShortestPaths extends App {
   println()
   for (vertex <- wg.vertices)
     println(s"Shortest path from $source to $vertex is ${dijkstra.shortestPathTo(vertex)}")
+  
 }

@@ -12,7 +12,7 @@ import scala.collection.mutable
  * @param source        the source vertex for constructing paths.
  * @param ord           `Ordering` used for comparing weights of edges.
  * @param num           `Numeric` used for adding weights of edges.
- * @tparam V  type of vertices in weights graph.
+ * @tparam V  type of vertices in weighted graph.
  * @tparam W  type of weights in weighted graph.
  * @tparam WE type of weighted edges in graph.
  * @author Pepe Gallardo
@@ -22,7 +22,7 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
 
   private val optimalCostAndSource = mutable.Map[V, CostAndSource]()
 
-  private val ordering = Ordering.by[CostAndSource, W](costAndSource => costAndSource.cost)
+  private val ordering = Ordering.by[CostAndSource, W](_.cost).reverse
   private val priorityQueue = mutable.PriorityQueue[CostAndSource]()(ordering)
 
   optimalCostAndSource(source) = CostAndSource(num.zero, source)

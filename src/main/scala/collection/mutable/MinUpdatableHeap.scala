@@ -2,22 +2,29 @@ package collection.mutable
 
 import scala.reflect.ClassTag
 
-object MinHeap {
+object MinUpdatableHeap {
   private inline val freeMark = -1
   private inline val maximumLoadFactor = 0.5
   private inline val rootIndex = 0
+  private inline val defaultCapacity = 128
+
+  def apply[T](initialCapacity: Int)(using priority: Ordering[T])(using classTag: ClassTag[T]): MinUpdatableHeap[T] =
+    new MinUpdatableHeap(initialCapacity)(using priority)(using classTag)
+
+  def apply[T](using priority: Ordering[T])(using classTag: ClassTag[T]): MinUpdatableHeap[T] =
+    new MinUpdatableHeap(defaultCapacity)(using priority)(using classTag)
 }
 
-class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T], classTag: ClassTag[T]) {
+class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classTag: ClassTag[T]) {
   private class HashTable {
-    private var keys = new Array[T](initialCapacity * 2)
+    var keys = new Array[T](initialCapacity * 2)
 
-    var heapIndexes: Array[Int] = Array.fill[Int](initialCapacity * 2)(MinHeap.freeMark)
+    var heapIndexes: Array[Int] = Array.fill[Int](initialCapacity * 2)(MinUpdatableHeap.freeMark)
 
-    private inline def isFree(inline index: Int): Boolean =
-      heapIndexes(index) == MinHeap.freeMark
+    inline def isFree(inline index: Int): Boolean =
+      heapIndexes(index) == MinUpdatableHeap.freeMark
 
-    private inline def isOccupied(inline index: Int): Boolean =
+    inline def isOccupied(inline index: Int): Boolean =
       !isFree(index)
 
     private var sz = 0
@@ -29,21 +36,19 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T], classTag: Cl
       while (isOccupied(index) && keys(index) != key) {
         index = (index + 1) % keys.length
       }
+      print(keys(index))
       index
     }
-
-    def heapIndexOf(key: T): Int =
-      heapIndexes(indexOf(key))
 
     private def loadFactor: Double = sz.toDouble / keys.length
 
     def insert(key: T, heapIndex: Int): (Int, Boolean) = {
-      if (loadFactor > MinHeap.maximumLoadFactor) {
+      if (loadFactor > MinUpdatableHeap.maximumLoadFactor) {
         // perform rehashing
         val oldKeys = keys
         val oldHeapIndexes = heapIndexes
         keys = new Array[T](keys.length * 2)
-        heapIndexes = Array.fill[Int](heapIndexes.length * 2)(MinHeap.freeMark)
+        heapIndexes = Array.fill[Int](heapIndexes.length * 2)(MinUpdatableHeap.freeMark)
         for (i <- oldKeys.indices) {
           if (isOccupied(i)) {
             val index = indexOf(oldKeys(i))
@@ -62,6 +67,13 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T], classTag: Cl
         sz += 1
       }
       (index, inserted)
+    }
+  }
+
+  private def check(): Unit = {
+    for(i <- 0 until sz) {
+      assert(heapElements(i) == hashTable.keys(hashTableIndexes(i)),
+        s"${heapElements(i)} ${hashTable.keys(hashTableIndexes(i))}")
     }
   }
 
@@ -90,14 +102,16 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T], classTag: Cl
       heapifyUpFrom(heapIndex)
       sz += 1
     } else {
-      // retrieve and update  already inserted element and decrease its priority
+      // retrieve and update already inserted element and decrease its priority
       val heapIndex = hashTable.heapIndexes(elementHashTableIndex)
-      require(heapElements(heapIndex) == element)
+      require(heapElements(heapIndex) == element, s"${heapElements(heapIndex)} $element")
       require(priority.compare(element, heapElements(heapIndex)) <= 0)
 
       heapElements(heapIndex) = element
       heapifyUpFrom(heapIndex)
     }
+    println(s"insert $element")
+    check()
   }
 
   private def heapifyUpFrom(index: Int): Unit = {
@@ -105,7 +119,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T], classTag: Cl
     val elementHashTableIndex = hashTableIndexes(elementIndex)
 
     var sorted = false
-    while (!sorted && elementIndex > MinHeap.rootIndex) {
+    while (!sorted && elementIndex > MinUpdatableHeap.rootIndex) {
       val parentIndex = (elementIndex - 1) / 2
       if (priority.compare(heapElements(elementIndex), heapElements(parentIndex)) >= 0) {
         sorted = true
@@ -170,22 +184,46 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T], classTag: Cl
     if (sz < 1) {
       throw new NoSuchElementException("first: heap is empty")
     }
-    heapElements(MinHeap.rootIndex)
+    heapElements(MinUpdatableHeap.rootIndex)
   }
 
   def deleteFirst(): T = {
     if (sz < 1) {
       throw new NoSuchElementException("deleteFirst: heap is empty")
     }
-    val first = heapElements(MinHeap.rootIndex)
+    println("deleteFirst")
+    check()
+    val first = heapElements(MinUpdatableHeap.rootIndex)
+    // todo extracted element should not have an heapIndex in hash table
     sz -= 1
     heapElements(0) = heapElements(sz)
     hashTableIndexes(0) = hashTableIndexes(sz)
+    hashTable.heapIndexes(hashTableIndexes(sz)) = 0
+
     heapifyDownFrom(0)
 
     heapElements(sz) = null.asInstanceOf[T] // let GC reclaim memory
+    println("deleteFirst")
+    check()
 
     first
   }
+
+  def contains(element: T): Boolean = {
+    val hashTableIndex = hashTable.indexOf(element)
+    hashTable.isOccupied(hashTableIndex)
+  }
+
+  def search(element: T): Option[T] = {
+    val hashTableIndex = hashTable.indexOf(element)
+    if (hashTable.isOccupied(hashTableIndex)) {
+      Some(heapElements(hashTable.heapIndexes(hashTableIndex)))
+    } else {
+      None
+    }
+  }
+
+
+  // todo implement heapifyUp/Down without swaps
 }
 

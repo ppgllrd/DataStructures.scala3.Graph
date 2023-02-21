@@ -1,6 +1,6 @@
 package graph
 
-import collection.mutable.MinHeap
+import collection.mutable.MinUpdatableHeap
 
 
 object MinHeap extends App {
@@ -8,7 +8,7 @@ object MinHeap extends App {
 
   val priority = Ordering.by[Element, Int](_.priority)
 
-  val heap = new MinHeap[Element](100)(using priority)
+  val heap = new MinUpdatableHeap[Element](100)(using priority)
 
   val rnd = scala.util.Random(0)
   val xs = Array.fill(100) {

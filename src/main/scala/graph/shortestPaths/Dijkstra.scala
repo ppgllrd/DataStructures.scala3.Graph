@@ -2,7 +2,7 @@ package graph.shortestPaths
 
 import graph.{GraphException, WeightedGraph}
 
-import scala.collection.mutable
+import collection.mutable
 
 /**
  * Class for computing shortest path from one source vertex to rest of reachable vertices in a non-negatively weighted
@@ -18,31 +18,42 @@ import scala.collection.mutable
  * @author Pepe Gallardo
  */
 class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V)(using ord: Ordering[W], num: Numeric[W]):
-  private case class CostAndSource(cost: W, source: V)
+  private final case class VertexAndCost(vertex: V, cost: W) {
+    def canEqual(other: Any): Boolean = other.isInstanceOf[VertexAndCost]
+    // note that equality only considers vertex in structure but not its cost
+    override def equals(other: Any): Boolean = other match {
+      case that: VertexAndCost =>
+        (that canEqual this) && vertex == that.vertex
+      case _ => false
+    }
 
-  private val optimalCostAndSource = mutable.Map[V, CostAndSource]()
+    override def hashCode(): Int =
+      vertex.hashCode()
+  }
 
-  private val ordering = Ordering.by[CostAndSource, W](_.cost).reverse
-  private val priorityQueue = mutable.PriorityQueue[CostAndSource]()(ordering)
+  private val optimalSourceAndCost = scala.collection.mutable.Map[V, VertexAndCost]()
 
-  optimalCostAndSource(source) = CostAndSource(num.zero, source)
-  priorityQueue.enqueue(CostAndSource(num.zero, source))
+  private val priority = Ordering.by[VertexAndCost, W](_.cost)
+  private val priorityQueue = mutable.MinUpdatableHeap[VertexAndCost](weightedGraph.order)(using priority)
+
+  optimalSourceAndCost(source) = VertexAndCost(source, num.zero)
+  priorityQueue.insertOrIncreasePriority(VertexAndCost(source, num.zero))
 
   while (priorityQueue.nonEmpty)
-    val CostAndSource(cost, vertex) = priorityQueue.dequeue()
-    val expand = optimalCostAndSource(vertex).cost == cost
-    // This is first extraction of vertex from PQ, hence it corresponds to its optimal cost, which is already
-    // recorded in optimalCostAndSource.
-    // Now that we know optimal cost for vertex, let's compute alternative costs to its neighbours and
-    // update if they improve current ones
-    if (expand)
-      for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
-        val newCost = num.plus(cost, weight)
-        val improvement =
-          optimalCostAndSource.get(incident).fold(true) { case CostAndSource(cost, _) => ord.compare(newCost, cost) < 0 }
-        if (improvement)
-          optimalCostAndSource(incident) = CostAndSource(newCost, vertex)
-          priorityQueue.enqueue(CostAndSource(newCost, incident))
+    val VertexAndCost(vertex, cost) = priorityQueue.deleteFirst()
+    // This is the only occurrence of vertex in PQ, hence it corresponds to its optimal cost, which is
+    // already recorded in optimalSourceAndCost.
+    // Now that we know optimal cost for vertex, let's compute alternative costs to its incidents and
+    // update if they improve currently known ones
+    for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
+      val newCost = num.plus(cost, weight)
+      val improvement =
+        println(priorityQueue.search(VertexAndCost(incident,null.asInstanceOf[W])))
+        optimalSourceAndCost.get(incident).fold(true){ case VertexAndCost(_, cost) => ord.compare(newCost, cost) < 0 }
+      if (improvement)
+        optimalSourceAndCost(incident) = VertexAndCost(vertex, newCost)
+        priorityQueue.insertOrIncreasePriority(VertexAndCost(incident, newCost))
+        // todo can reinsert a vertex for which we already determined its optimal cost
 
   /**
    * Returns cost of shortest path from vertex `source` to vertex `destination`.
@@ -51,9 +62,9 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
    * @return cost of shortest path from vertex `source` to vertex `destination`.
    */
   def lowestCostTo(destination: V): W =
-    optimalCostAndSource.get(destination) match
+    optimalSourceAndCost.get(destination) match
       case None => throw GraphException(s"optimalCostTo: vertex $destination cannot be reached from vertex $source")
-      case Some(CostAndSource(cost, _)) => cost
+      case Some(VertexAndCost(_, cost)) => cost
 
   /**
    * Returns shortest path from vertex `source` to vertex `destination`.
@@ -62,13 +73,13 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
    * @return shortest path from vertex `source` to vertex `destination`.
    */
   def shortestPathTo(destination: V): List[V] =
-    optimalCostAndSource.get(destination) match
+    optimalSourceAndCost.get(destination) match
       case None => throw GraphException(s"optimalPathTo: vertex $destination cannot be reached from vertex $source")
-      case Some(CostAndSource(_, src)) =>
+      case Some(VertexAndCost(src, _)) =>
         var path = List(destination)
         if (destination != source)
           path = src :: path
         while (path.head != source)
-          path = optimalCostAndSource(path.head).source :: path
+          path = optimalSourceAndCost(path.head).vertex :: path
         path
 

@@ -2,7 +2,7 @@ package graph.minimumSpanningTrees
 
 import graph.{MapWeightedGraph, WeightedEdge, WeightedGraph}
 
-import scala.collection.mutable
+import collection.mutable
 
 /**
  * Class for computing minimum spanning tree for a weighted graph using Prim's algorithm.
@@ -17,41 +17,39 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
   private val vertices = weightedGraph.vertices
   private val minSpanningTree = new MapWeightedGraph[V, W]()
 
-  private case class Best(vertex: V, weight: W)
-
   if (vertices.nonEmpty)
     // take one vertex and add it to spanning tree
     val vertex = vertices.head
     minSpanningTree.addVertex(vertex)
 
-    val ordering = Ordering.by[WeightedEdge[V, W], W](_.weight).reverse
-    val priorityQueue = new mutable.PriorityQueue[WeightedEdge[V, W]]()(ordering)
+    val priority = Ordering.by[WeightedEdge[V, W], W](_.weight)
+    val priorityQueue = mutable.MinUpdatableHeap[WeightedEdge[V, W]](using priority)
 
     // add to priority queue edge incident to vertex with minimal cost
     val iterator = weightedGraph.successorsAndWeights(vertex).iterator
     if (iterator.hasNext)
-      val (incident, weight) = iterator.next()
-      var best = Best(incident, weight)
+      var (bestIncident, bestWeight) = iterator.next()
       while (iterator.hasNext)
         val (incident, weight) = iterator.next()
-        if (ord.compare(weight, best.weight) < 0)
-          best = Best(incident, weight)
-      priorityQueue.enqueue(WeightedEdge(vertex, best.vertex, best.weight))
+        if (ord.compare(weight, bestWeight) < 0)
+          bestIncident = incident
+          bestWeight = weight
+      priorityQueue.insertOrIncreasePriority(WeightedEdge(vertex, bestIncident, bestWeight))
 
     while (priorityQueue.nonEmpty)
-      val edge = priorityQueue.dequeue()
-      val vertex = edge.vertex2
+      val weightedEdge = priorityQueue.deleteFirst()
+      val vertex = weightedEdge.vertex2
       if (!minSpanningTree.containsVertex(vertex))
         // vertex not in spanning tree yet. This edge is the one leading to it (from a vertex in spanning tree)
         // with minimal cost, hence we add vertex and edge to spanning tree
         minSpanningTree.addVertex(vertex)
-        minSpanningTree.addEdge(edge)
+        minSpanningTree.addEdge(weightedEdge)
 
         // compute alternative costs for all vertices incident to this one which are not yet in spanning tree and put
         // them in priority queue as they may improve previous known ones
         for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
           if (!minSpanningTree.containsVertex(incident))
-            priorityQueue.enqueue(WeightedEdge(vertex, incident, weight))
+            priorityQueue.insertOrIncreasePriority(WeightedEdge(vertex, incident, weight))
 
   /**
    * Returns a weighted graph corresponding to minimum spanning tree.

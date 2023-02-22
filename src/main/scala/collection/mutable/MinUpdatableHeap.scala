@@ -2,8 +2,11 @@ package collection.mutable
 
 import scala.reflect.ClassTag
 
+class Locator private[mutable](val index: Int) extends AnyVal
+
 object MinUpdatableHeap {
   private inline val freeMark = -1
+  private inline val extractedMark = -2
   private inline val maximumLoadFactor = 0.5
   private inline val rootIndex = 0
   private inline val defaultCapacity = 128
@@ -24,6 +27,9 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     inline def isFree(inline index: Int): Boolean =
       heapIndexes(index) == MinUpdatableHeap.freeMark
 
+    inline def isExtracted(inline index: Int): Boolean =
+      heapIndexes(index) == MinUpdatableHeap.extractedMark
+
     inline def isOccupied(inline index: Int): Boolean =
       !isFree(index)
 
@@ -36,7 +42,6 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
       while (isOccupied(index) && keys(index) != key) {
         index = (index + 1) % keys.length
       }
-      print(keys(index))
       index
     }
 
@@ -71,7 +76,7 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
   }
 
   private def check(): Unit = {
-    for(i <- 0 until sz) {
+    for (i <- 0 until sz) {
       assert(heapElements(i) == hashTable.keys(hashTableIndexes(i)),
         s"${heapElements(i)} ${hashTable.keys(hashTableIndexes(i))}")
     }
@@ -110,73 +115,130 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
       heapElements(heapIndex) = element
       heapifyUpFrom(heapIndex)
     }
-    println(s"insert $element")
+    // println(s"insert $element")
     check()
   }
 
+  private inline def parentIndexOf(inline index: Int): Int =
+    (index - 1) / 2
+
+  private inline def leftChildIndexOf(inline index: Int): Int =
+    index * 2 + 1
+
+  private inline def isValidIndex(inline index: Int): Boolean =
+    index < sz
+
+  private inline def hasParentIndex(inline index: Int): Boolean =
+    index > MinUpdatableHeap.rootIndex
+
   private def heapifyUpFrom(index: Int): Unit = {
     var elementIndex = index
+    val element = heapElements(elementIndex)
     val elementHashTableIndex = hashTableIndexes(elementIndex)
 
     var sorted = false
-    while (!sorted && elementIndex > MinUpdatableHeap.rootIndex) {
-      val parentIndex = (elementIndex - 1) / 2
-      if (priority.compare(heapElements(elementIndex), heapElements(parentIndex)) >= 0) {
+    var moved = false
+    while (!sorted && hasParentIndex(elementIndex)) {
+      val parentIndex = parentIndexOf(elementIndex)
+      val parent = heapElements(parentIndex)
+      if (priority.compare(element, parent) >= 0) {
         sorted = true
       } else {
-        val parentHashTableIndex = hashTable.indexOf(heapElements(parentIndex))
+        // move parent down
+        val parentHashTableIndex = hashTableIndexes(parentIndex)
 
-        val tmpElement = heapElements(elementIndex)
-        heapElements(elementIndex) = heapElements(parentIndex)
-        heapElements(parentIndex) = tmpElement
+        heapElements(elementIndex) = parent
+        hashTableIndexes(elementIndex) = parentHashTableIndex
 
-        val tmpHashTableIndex = hashTableIndexes(elementIndex)
-        hashTableIndexes(elementIndex) = hashTableIndexes(parentIndex)
-        hashTableIndexes(parentIndex) = tmpHashTableIndex
+        hashTable.heapIndexes(parentHashTableIndex) = elementIndex
 
-        val tmpHeapIndex = hashTable.heapIndexes(parentHashTableIndex)
-        hashTable.heapIndexes(parentHashTableIndex) = hashTable.heapIndexes(elementHashTableIndex)
-        hashTable.heapIndexes(elementHashTableIndex) = tmpHeapIndex
-
+        moved = true
         elementIndex = parentIndex
+        /*
+                val parentHashTableIndex = hashTableIndexes(parentIndex)
+
+                val tmpElement = heapElements(elementIndex)
+                heapElements(elementIndex) = heapElements(parentIndex)
+                heapElements(parentIndex) = tmpElement
+
+                val tmpHashTableIndex = hashTableIndexes(elementIndex)
+                hashTableIndexes(elementIndex) = parentHashTableIndex
+                hashTableIndexes(parentIndex) = tmpHashTableIndex
+
+                val tmpHeapIndex = hashTable.heapIndexes(parentHashTableIndex)
+                hashTable.heapIndexes(parentHashTableIndex) = elementIndex
+                hashTable.heapIndexes(elementHashTableIndex) = tmpHeapIndex
+
+                elementIndex = parentIndex
+        */
       }
+    }
+    if (moved) {
+      // place initial element in its right position
+      heapElements(elementIndex) = element
+      hashTableIndexes(elementIndex) = elementHashTableIndex
+
+      hashTable.heapIndexes(elementHashTableIndex) = elementIndex
     }
   }
 
   private def heapifyDownFrom(index: Int): Unit = {
     var elementIndex = index
+    val element = heapElements(elementIndex)
     val elementHashTableIndex = hashTableIndexes(elementIndex)
 
     var sorted = false
+    var moved = false
     var minimumChildIndex = 0
     while ( {
-      minimumChildIndex = elementIndex * 2 + 1
-      !sorted && minimumChildIndex < sz
+      minimumChildIndex = leftChildIndexOf(elementIndex)
+      !sorted && isValidIndex(minimumChildIndex)
     }) {
+      // find minimum child
       val rightChildIndex = minimumChildIndex + 1
-      if (rightChildIndex < sz && priority.compare(heapElements(rightChildIndex), heapElements(minimumChildIndex)) < 0) {
+      if (isValidIndex(rightChildIndex) &&
+        priority.compare(heapElements(rightChildIndex), heapElements(minimumChildIndex)) < 0) {
         minimumChildIndex = rightChildIndex
       }
-
-      if (priority.compare(heapElements(minimumChildIndex), heapElements(elementIndex)) >= 0) {
+      val minimumChild = heapElements(minimumChildIndex)
+      if (priority.compare(minimumChild, element) >= 0) {
         sorted = true
       } else {
-        val minimumChildHashTableIndex = hashTable.indexOf(heapElements(minimumChildIndex))
+        // move minimum children up
+        val minimumChildHashTableIndex = hashTableIndexes(minimumChildIndex)
 
-        val tmpElement = heapElements(elementIndex)
-        heapElements(elementIndex) = heapElements(minimumChildIndex)
-        heapElements(minimumChildIndex) = tmpElement
+        heapElements(elementIndex) = minimumChild
+        hashTableIndexes(elementIndex) = minimumChildHashTableIndex
 
-        val tmpHashTableIndex = hashTableIndexes(elementIndex)
-        hashTableIndexes(elementIndex) = hashTableIndexes(minimumChildIndex)
-        hashTableIndexes(minimumChildIndex) = tmpHashTableIndex
+        hashTable.heapIndexes(minimumChildHashTableIndex) = elementIndex
 
-        val tmpHeapIndex = hashTable.heapIndexes(minimumChildHashTableIndex)
-        hashTable.heapIndexes(minimumChildHashTableIndex) = hashTable.heapIndexes(elementHashTableIndex)
-        hashTable.heapIndexes(elementHashTableIndex) = tmpHeapIndex
-
+        moved = true
         elementIndex = minimumChildIndex
+        /*
+                val minimumChildHashTableIndex = hashTableIndexes(minimumChildIndex)
+
+                val tmpElement = heapElements(elementIndex)
+                heapElements(elementIndex) = heapElements(minimumChildIndex)
+                heapElements(minimumChildIndex) = tmpElement
+
+                val tmpHashTableIndex = hashTableIndexes(elementIndex)
+                hashTableIndexes(elementIndex) = minimumChildHashTableIndex
+                hashTableIndexes(minimumChildIndex) = tmpHashTableIndex
+
+                val tmpHeapIndex = hashTable.heapIndexes(minimumChildHashTableIndex)
+                hashTable.heapIndexes(minimumChildHashTableIndex) = elementIndex
+                hashTable.heapIndexes(elementHashTableIndex) = tmpHeapIndex
+
+                elementIndex = minimumChildIndex
+        */
       }
+    }
+    if (moved) {
+      // place initial element in its right position
+      heapElements(elementIndex) = element
+      hashTableIndexes(elementIndex) = elementHashTableIndex
+
+      hashTable.heapIndexes(elementHashTableIndex) = elementIndex
     }
   }
 
@@ -191,10 +253,11 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     if (sz < 1) {
       throw new NoSuchElementException("deleteFirst: heap is empty")
     }
-    println("deleteFirst")
+    // println("deleteFirst")
     check()
     val first = heapElements(MinUpdatableHeap.rootIndex)
-    // todo extracted element should not have an heapIndex in hash table
+    hashTable.heapIndexes(hashTableIndexes(MinUpdatableHeap.rootIndex)) = MinUpdatableHeap.extractedMark
+
     sz -= 1
     heapElements(0) = heapElements(sz)
     hashTableIndexes(0) = hashTableIndexes(sz)
@@ -203,10 +266,15 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     heapifyDownFrom(0)
 
     heapElements(sz) = null.asInstanceOf[T] // let GC reclaim memory
-    println("deleteFirst")
+    // println("deleteFirst")
     check()
 
     first
+  }
+
+  def locatorFor(element: T): Locator = {
+    val hashTableIndex = hashTable.indexOf(element)
+    new Locator(hashTableIndex)
   }
 
   def contains(element: T): Boolean = {
@@ -214,16 +282,26 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     hashTable.isOccupied(hashTableIndex)
   }
 
+  def contained(element: T): Boolean = {
+    val hashTableIndex = hashTable.indexOf(element)
+    hashTable.isExtracted(hashTableIndex)
+  }
+
+  def hasContained(element: T): Boolean = {
+    val hashTableIndex = hashTable.indexOf(element)
+    hashTable.isExtracted(hashTableIndex) || hashTable.isOccupied(hashTableIndex)
+  }
+
   def search(element: T): Option[T] = {
     val hashTableIndex = hashTable.indexOf(element)
-    if (hashTable.isOccupied(hashTableIndex)) {
+
+    if (hashTable.isExtracted(hashTableIndex)) {
+      None
+    } else if (hashTable.isOccupied(hashTableIndex)) {
       Some(heapElements(hashTable.heapIndexes(hashTableIndex)))
     } else {
       None
     }
   }
-
-
-  // todo implement heapifyUp/Down without swaps
 }
 

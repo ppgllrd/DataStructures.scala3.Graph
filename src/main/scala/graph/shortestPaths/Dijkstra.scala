@@ -41,19 +41,19 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
 
   while (priorityQueue.nonEmpty)
     val VertexAndCost(vertex, cost) = priorityQueue.deleteFirst()
-    // This is the only occurrence of vertex in PQ, hence it corresponds to its optimal cost, which is
-    // already recorded in optimalSourceAndCost.
-    // Now that we know optimal cost for vertex, let's compute alternative costs to its incidents and
-    // update if they improve currently known ones
-    for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
-      val newCost = num.plus(cost, weight)
-      val improvement =
-        println(priorityQueue.search(VertexAndCost(incident,null.asInstanceOf[W])))
-        optimalSourceAndCost.get(incident).fold(true){ case VertexAndCost(_, cost) => ord.compare(newCost, cost) < 0 }
-      if (improvement)
-        optimalSourceAndCost(incident) = VertexAndCost(vertex, newCost)
-        priorityQueue.insertOrIncreasePriority(VertexAndCost(incident, newCost))
-        // todo can reinsert a vertex for which we already determined its optimal cost
+    val expand = optimalSourceAndCost(vertex).cost == cost
+    // If expand is true, this is first extraction of vertex from PQ, hence it corresponds to its optimal cost, which
+    // is already recorded in optimalSourceAndCost.
+    // Now that we know optimal cost for vertex, let's compute alternative costs to its neighbours and
+    // update if they improve current ones
+    if (expand)
+      for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
+        val newCost = num.plus(cost, weight)
+        val improvement =
+          optimalSourceAndCost.get(incident).fold(true){ case VertexAndCost(_, cost) => ord.compare(newCost, cost) < 0 }
+        if (improvement)
+          optimalSourceAndCost(incident) = VertexAndCost(vertex, newCost)
+          priorityQueue.insertOrIncreasePriority(VertexAndCost(incident, newCost))
 
   /**
    * Returns cost of shortest path from vertex `source` to vertex `destination`.

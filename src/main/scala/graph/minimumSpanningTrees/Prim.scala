@@ -1,8 +1,7 @@
 package graph.minimumSpanningTrees
 
-import graph.{MapWeightedGraph, WeightedEdge, WeightedGraph}
-
 import collection.mutable
+import graph.{MapWeightedGraph, WeightedEdge, WeightedGraph}
 
 /**
  * Class for computing minimum spanning tree for a weighted graph using Prim's algorithm.
@@ -23,7 +22,7 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
     minSpanningTree.addVertex(vertex)
 
     val priority = Ordering.by[WeightedEdge[V, W], W](_.weight)
-    val priorityQueue = mutable.MinUpdatableHeap[WeightedEdge[V, W]](using priority)
+    val priorityQueue = mutable.MinHeapMap[WeightedEdge[V, W], Unit](using priority)
 
     // add to priority queue edge incident to vertex with minimal cost
     val iterator = weightedGraph.successorsAndWeights(vertex).iterator

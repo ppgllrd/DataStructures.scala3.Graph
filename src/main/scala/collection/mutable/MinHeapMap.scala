@@ -4,31 +4,37 @@ import scala.reflect.ClassTag
 
 class Locator private[mutable](val index: Int) extends AnyVal
 
-object MinUpdatableHeap {
+object MinHeapMap {
   private inline val freeMark = -1
   private inline val extractedMark = -2
   private inline val maximumLoadFactor = 0.5
   private inline val rootIndex = 0
   private inline val defaultCapacity = 128
 
-  def apply[T](initialCapacity: Int)(using priority: Ordering[T])(using classTag: ClassTag[T]): MinUpdatableHeap[T] =
-    new MinUpdatableHeap(initialCapacity)(using priority)(using classTag)
+  def apply[T, V](initialCapacity: Int)(using priority: Ordering[T])(using classTagT: ClassTag[T])(using
+    classTagV: ClassTag[V]
+  )
+  : MinHeapMap[T, V] =
+    new MinHeapMap(initialCapacity)(using priority)(using classTagT)(using classTagV)
 
-  def apply[T](using priority: Ordering[T])(using classTag: ClassTag[T]): MinUpdatableHeap[T] =
-    new MinUpdatableHeap(defaultCapacity)(using priority)(using classTag)
+  def apply[T, V](using priority: Ordering[T])(using classTagT: ClassTag[T])(using classTagV: ClassTag[V])
+  : MinHeapMap[T, V] =
+    new MinHeapMap(defaultCapacity)(using priority)(using classTagT)(using classTagV)
 }
 
-class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classTag: ClassTag[T]) {
+class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
+  (using classTagT: ClassTag[T])(using classTagV: ClassTag[V]) {
   private class HashTable {
     var keys = new Array[T](initialCapacity * 2)
+    var values = new Array[V](initialCapacity * 2)
 
-    var heapIndexes: Array[Int] = Array.fill[Int](initialCapacity * 2)(MinUpdatableHeap.freeMark)
+    var heapIndexes: Array[Int] = Array.fill[Int](initialCapacity * 2)(MinHeapMap.freeMark)
 
     inline def isFree(inline index: Int): Boolean =
-      heapIndexes(index) == MinUpdatableHeap.freeMark
+      heapIndexes(index) == MinHeapMap.freeMark
 
     inline def isExtracted(inline index: Int): Boolean =
-      heapIndexes(index) == MinUpdatableHeap.extractedMark
+      heapIndexes(index) == MinHeapMap.extractedMark
 
     inline def isOccupied(inline index: Int): Boolean =
       !isFree(index)
@@ -48,16 +54,19 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     private def loadFactor: Double = sz.toDouble / keys.length
 
     def insert(key: T, heapIndex: Int): (Int, Boolean) = {
-      if (loadFactor > MinUpdatableHeap.maximumLoadFactor) {
+      if (loadFactor > MinHeapMap.maximumLoadFactor) {
         // perform rehashing
         val oldKeys = keys
+        val oldValues = values
         val oldHeapIndexes = heapIndexes
         keys = new Array[T](keys.length * 2)
-        heapIndexes = Array.fill[Int](heapIndexes.length * 2)(MinUpdatableHeap.freeMark)
+        values = new Array[V](keys.length * 2)
+        heapIndexes = Array.fill[Int](heapIndexes.length * 2)(MinHeapMap.freeMark)
         for (i <- oldKeys.indices) {
           if (isOccupied(i)) {
             val index = indexOf(oldKeys(i))
             keys(index) = oldKeys(i)
+            values(index) = oldValues(i)
             heapIndexes(index) = oldHeapIndexes(i)
           }
         }
@@ -87,38 +96,6 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
   private var hashTableIndexes = new Array[Int](initialCapacity)
   private var sz = 0
 
-  def isEmpty: Boolean = sz <= 0
-
-  def nonEmpty: Boolean = sz > 0
-
-  def insertOrIncreasePriority(element: T): Unit = {
-    val heapIndex = sz
-    if (heapIndex >= heapElements.length) {
-      // ensure capacity
-      heapElements = Array.copyOf(heapElements, heapElements.length * 2)
-      hashTableIndexes = Array.copyOf(hashTableIndexes, hashTableIndexes.length * 2)
-    }
-    val (elementHashTableIndex, inserted) = hashTable.insert(element, heapIndex)
-
-    if (inserted) {
-      // insert new element in heap
-      heapElements(heapIndex) = element
-      hashTableIndexes(heapIndex) = elementHashTableIndex
-      heapifyUpFrom(heapIndex)
-      sz += 1
-    } else {
-      // retrieve and update already inserted element and decrease its priority
-      val heapIndex = hashTable.heapIndexes(elementHashTableIndex)
-      require(heapElements(heapIndex) == element, s"${heapElements(heapIndex)} $element")
-      require(priority.compare(element, heapElements(heapIndex)) <= 0)
-
-      heapElements(heapIndex) = element
-      heapifyUpFrom(heapIndex)
-    }
-    // println(s"insert $element")
-    check()
-  }
-
   private inline def parentIndexOf(inline index: Int): Int =
     (index - 1) / 2
 
@@ -129,7 +106,7 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     index < sz
 
   private inline def hasParentIndex(inline index: Int): Boolean =
-    index > MinUpdatableHeap.rootIndex
+    index > MinHeapMap.rootIndex
 
   private def heapifyUpFrom(index: Int): Unit = {
     var elementIndex = index
@@ -154,23 +131,6 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
 
         moved = true
         elementIndex = parentIndex
-        /*
-                val parentHashTableIndex = hashTableIndexes(parentIndex)
-
-                val tmpElement = heapElements(elementIndex)
-                heapElements(elementIndex) = heapElements(parentIndex)
-                heapElements(parentIndex) = tmpElement
-
-                val tmpHashTableIndex = hashTableIndexes(elementIndex)
-                hashTableIndexes(elementIndex) = parentHashTableIndex
-                hashTableIndexes(parentIndex) = tmpHashTableIndex
-
-                val tmpHeapIndex = hashTable.heapIndexes(parentHashTableIndex)
-                hashTable.heapIndexes(parentHashTableIndex) = elementIndex
-                hashTable.heapIndexes(elementHashTableIndex) = tmpHeapIndex
-
-                elementIndex = parentIndex
-        */
       }
     }
     if (moved) {
@@ -214,23 +174,6 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
 
         moved = true
         elementIndex = minimumChildIndex
-        /*
-                val minimumChildHashTableIndex = hashTableIndexes(minimumChildIndex)
-
-                val tmpElement = heapElements(elementIndex)
-                heapElements(elementIndex) = heapElements(minimumChildIndex)
-                heapElements(minimumChildIndex) = tmpElement
-
-                val tmpHashTableIndex = hashTableIndexes(elementIndex)
-                hashTableIndexes(elementIndex) = minimumChildHashTableIndex
-                hashTableIndexes(minimumChildIndex) = tmpHashTableIndex
-
-                val tmpHeapIndex = hashTable.heapIndexes(minimumChildHashTableIndex)
-                hashTable.heapIndexes(minimumChildHashTableIndex) = elementIndex
-                hashTable.heapIndexes(elementHashTableIndex) = tmpHeapIndex
-
-                elementIndex = minimumChildIndex
-        */
       }
     }
     if (moved) {
@@ -242,21 +185,57 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     }
   }
 
+  def isEmpty: Boolean = sz <= 0
+
+  def nonEmpty: Boolean = sz > 0
+
+  def locatorFor(element: T): Locator = {
+    val hashTableIndex = hashTable.indexOf(element)
+    if (hashTable.isFree(hashTableIndex)) {
+      hashTable.keys(hashTableIndex) = element
+    }
+    new Locator(hashTableIndex)
+  }
+
+  def insertOrIncreasePriority(element: T): Unit = {
+    val heapIndex = sz
+    if (heapIndex >= heapElements.length) {
+      // ensure capacity
+      heapElements = Array.copyOf(heapElements, heapElements.length * 2)
+      hashTableIndexes = Array.copyOf(hashTableIndexes, hashTableIndexes.length * 2)
+    }
+    val (elementHashTableIndex, inserted) = hashTable.insert(element, heapIndex)
+
+    if (inserted) {
+      // insert new element in heap
+      heapElements(heapIndex) = element
+      hashTableIndexes(heapIndex) = elementHashTableIndex
+      heapifyUpFrom(heapIndex)
+      sz += 1
+    } else {
+      // retrieve and update already inserted element and decrease its priority
+      val heapIndex = hashTable.heapIndexes(elementHashTableIndex)
+      require(heapElements(heapIndex) == element, s"${heapElements(heapIndex)} $element")
+      require(priority.compare(element, heapElements(heapIndex)) <= 0)
+
+      heapElements(heapIndex) = element
+      heapifyUpFrom(heapIndex)
+    }
+  }
+
   def first: T = {
     if (sz < 1) {
       throw new NoSuchElementException("first: heap is empty")
     }
-    heapElements(MinUpdatableHeap.rootIndex)
+    heapElements(MinHeapMap.rootIndex)
   }
 
   def deleteFirst(): T = {
     if (sz < 1) {
       throw new NoSuchElementException("deleteFirst: heap is empty")
     }
-    // println("deleteFirst")
-    check()
-    val first = heapElements(MinUpdatableHeap.rootIndex)
-    hashTable.heapIndexes(hashTableIndexes(MinUpdatableHeap.rootIndex)) = MinUpdatableHeap.extractedMark
+    val first = heapElements(MinHeapMap.rootIndex)
+    hashTable.heapIndexes(hashTableIndexes(MinHeapMap.rootIndex)) = MinHeapMap.extractedMark
 
     sz -= 1
     heapElements(0) = heapElements(sz)
@@ -266,15 +245,54 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
     heapifyDownFrom(0)
 
     heapElements(sz) = null.asInstanceOf[T] // let GC reclaim memory
-    // println("deleteFirst")
-    check()
 
     first
   }
 
-  def locatorFor(element: T): Locator = {
+  def update(element: T, value: V): Locator = {
     val hashTableIndex = hashTable.indexOf(element)
+    if (hashTable.isFree(hashTableIndex)) {
+      hashTable.keys(hashTableIndex) = element
+    }
+    hashTable.values(hashTableIndex) = value
     new Locator(hashTableIndex)
+  }
+
+  def update(locator: Locator, value: V): Locator = {
+    val hashTableIndex = locator.index
+    (!hashTable.isFree(hashTableIndex), "update: element for locator is not in map")
+    hashTable.values(hashTableIndex) = value
+    locator
+  }
+
+  def apply(element: T): V = {
+    val hashTableIndex = hashTable.indexOf(element)
+    assert(!hashTable.isFree(hashTableIndex), "getValue: element for locator is not in map")
+    hashTable.values(hashTableIndex)
+  }
+
+  def apply(locator: Locator): V = {
+    val hashTableIndex = locator.index
+    assert(!hashTable.isFree(hashTableIndex), "getValue: element for locator is not in map")
+    hashTable.values(hashTableIndex)
+  }
+
+  def get(element: T): Option[V] = {
+    val hashTableIndex = hashTable.indexOf(element)
+    if (!hashTable.isFree(hashTableIndex)) {
+      Some(hashTable.values(hashTableIndex))
+    } else {
+      None
+    }
+  }
+
+  def get(locator: Locator): Option[V] = {
+    val hashTableIndex = locator.index
+    if (!hashTable.isFree(hashTableIndex)) {
+      Some(hashTable.values(hashTableIndex))
+    } else {
+      None
+    }
   }
 
   def contains(element: T): Boolean = {
@@ -290,18 +308,6 @@ class MinUpdatableHeap[T](initialCapacity: Int)(using priority: Ordering[T])(usi
   def hasContained(element: T): Boolean = {
     val hashTableIndex = hashTable.indexOf(element)
     hashTable.isExtracted(hashTableIndex) || hashTable.isOccupied(hashTableIndex)
-  }
-
-  def search(element: T): Option[T] = {
-    val hashTableIndex = hashTable.indexOf(element)
-
-    if (hashTable.isExtracted(hashTableIndex)) {
-      None
-    } else if (hashTable.isOccupied(hashTableIndex)) {
-      Some(heapElements(hashTable.heapIndexes(hashTableIndex)))
-    } else {
-      None
-    }
   }
 }
 

@@ -33,7 +33,7 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
         if (ord.compare(weight, bestWeight) < 0)
           bestIncident = incident
           bestWeight = weight
-      priorityQueue.insertOrIncreasePriority(WeightedEdge(vertex, bestIncident, bestWeight))
+      priorityQueue.insert(WeightedEdge(vertex, bestIncident, bestWeight))
 
     while (priorityQueue.nonEmpty)
       val weightedEdge = priorityQueue.deleteFirst()
@@ -48,7 +48,7 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
         // them in priority queue as they may improve previous known ones
         for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
           if (!minSpanningTree.containsVertex(incident))
-            priorityQueue.insertOrIncreasePriority(WeightedEdge(vertex, incident, weight))
+            priorityQueue.insert(WeightedEdge(vertex, incident, weight))
 
   /**
    * Returns a weighted graph corresponding to minimum spanning tree.

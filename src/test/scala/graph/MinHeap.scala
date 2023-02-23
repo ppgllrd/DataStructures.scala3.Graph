@@ -8,7 +8,7 @@ object MinHeap extends App {
 
   val priority = Ordering.by[Element, Int](_.priority)
 
-  val heap = new MinHeapMap[Element, Int](100)(using priority)
+  val heap = new MinHeapMap[Element, Unit](100)(using priority)
 
   val rnd = scala.util.Random(0)
   val xs = Array.fill(100) {
@@ -18,10 +18,11 @@ object MinHeap extends App {
 
   println(xs.size)
   for (x <- xs)
-    heap.insertOrIncreasePriority(x)
+    heap.insert(x)
 
-  heap.insertOrIncreasePriority(Element(957, 940))
-  heap.insertOrIncreasePriority(Element(960, 902))
+  heap.insert(Element(957, 940)) // improve priority
+  heap.insert(Element(960, 902)) // improve priority
+  heap.insert(Element(947, 950)) // worsen priority
 
   var prev = -1
   while (heap.nonEmpty) {

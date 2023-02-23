@@ -17,10 +17,6 @@ import graph.{GraphException, WeightedGraph}
  * @author Pepe Gallardo
  */
 class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V)(using ord: Ordering[W], num: Numeric[W]):
-  private val priority = Ordering.by[VertexAndCost, W](_.cost)
-  private val priorityQueue = mutable.MinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
-  run()
-
   private final case class VertexAndCost(vertex: V, cost: W):
     def canEqual(other: Any): Boolean = other.isInstanceOf[VertexAndCost]
 
@@ -34,6 +30,10 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
       vertex.hashCode()
 
   private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
+
+  private val priority = Ordering.by((vertexAndCost: VertexAndCost) => vertexAndCost.cost)
+  private val priorityQueue = mutable.MinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
+  run()
 
   private def run(): Unit =
     // map is going to store for each vertex cost of best known path and vertex before in such path

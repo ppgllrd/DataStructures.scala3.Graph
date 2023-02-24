@@ -1,12 +1,17 @@
 package collection.mutable.heap
 
-import collection.mutable.heap.{HashTableHeapIndexesValues, Locator, MinHeapMap}
+import collection.mutable.heap.{HashTableHeapIndexes, Locator}
 
 import scala.reflect.ClassTag
 
-object MinHeapMap {
-  private inline val rootIndex = 0
-  private inline val defaultCapacity = 128
+/**
+ * A locator can be used for fast access to elements stored in heap or map.
+ */
+class Locator private[heap](val index: Int) extends AnyVal
+
+object MinHeap {
+  protected inline val rootIndex = 0
+  protected inline val defaultCapacity = 128
 
   /**
    * Constructs a new `MinHeapMap`.
@@ -14,28 +19,23 @@ object MinHeapMap {
    * @param initialCapacity initial capacity of heap. Will be expanded as needed.
    * @param priority        `Ordering` describing priorities of elements stored in heap.
    * @param classTagT       a class tag for type of elements stored in heap.
-   * @param classTagV       a class tag for type of values associated in map.
    * @tparam T Type of elements stored in heap.
-   * @tparam V Type of values associated in map.
    * @return a new `MinHeapMap`.
    */
-  def apply[T, V](initialCapacity: Int)(using priority: Ordering[T])(using classTagT: ClassTag[T])
-    (using classTagV: ClassTag[V]): MinHeapMap[T, V] =
-    new MinHeapMap(initialCapacity)(using priority)(using classTagT)(using classTagV)
+  def apply[T](initialCapacity: Int)(using priority: Ordering[T])(using classTagT: ClassTag[T])
+  : MinHeap[T] =
+    new MinHeap(initialCapacity)(using priority)(using classTagT)
 
   /**
    * Constructs a new `MinHeapMap` using default capacity (Will be expanded as needed).
    *
    * @param priority  `Ordering` describing priorities of elements stored in heap.
    * @param classTagT a class tag for type of elements stored in heap.
-   * @param classTagV a class tag for type of values associated in map.
    * @tparam T Type of elements stored in heap.
-   * @tparam V Type of values associated in map.
    * @return a new `MinHeapMap`.
    */
-  def apply[T, V](using priority: Ordering[T])(using classTagT: ClassTag[T])
-    (using classTagV: ClassTag[V]): MinHeapMap[T, V] =
-    new MinHeapMap(defaultCapacity)(using priority)(using classTagT)(using classTagV)
+  def apply[T](using priority: Ordering[T])(using classTagT: ClassTag[T]): MinHeap[T] =
+    new MinHeap(defaultCapacity)(using priority)(using classTagT)
 }
 
 /**
@@ -55,13 +55,10 @@ object MinHeapMap {
  * @param initialCapacity initial capacity of heap. Will be expanded as needed.
  * @param priority        `Ordering` describing priorities of elements stored in heap.
  * @param classTagT       a class tag for type of elements stored in heap.
- * @param classTagV       a class tag for type of values associated in map.
  * @tparam T Type of elements stored in heap.
- * @tparam V Type of values associated in map.
  * @author Pepe Gallardo
  */
-class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
-  (using classTagT: ClassTag[T])(using classTagV: ClassTag[V]) {
+class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classTagT: ClassTag[T]) {
 
   private def check(): Unit = {
     for (i <- 0 until sz) {
@@ -71,7 +68,7 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
   }
 
   // the hash table for this heap
-  private val hashTable = new HashTableHeapIndexesValues[T, V](initialCapacity * 2)
+  private val hashTable = new HashTableHeapIndexes[T](initialCapacity * 2)
 
   // elements in complete binary heap
   private var heapElements = new Array[T](initialCapacity)
@@ -94,7 +91,7 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
 
   // checks if an element is not the root of heap
   private inline def hasParentIndex(inline index: Int): Boolean =
-    index > MinHeapMap.rootIndex
+    index > MinHeap.rootIndex
 
   // moves element in heap at given index up as needed in order to restore heap order property
   private def heapifyUpFrom(index: Int): Unit = {
@@ -295,7 +292,7 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
     if (sz < 1) {
       throw new NoSuchElementException("first: heap is empty")
     }
-    heapElements(MinHeapMap.rootIndex)
+    heapElements(MinHeap.rootIndex)
   }
 
   /**
@@ -308,8 +305,8 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
     if (sz < 1) {
       throw new NoSuchElementException("deleteFirst: heap is empty")
     }
-    val first = heapElements(MinHeapMap.rootIndex)
-    hashTable.heapIndexes(hashTableIndexes(MinHeapMap.rootIndex)) = HashTableHeapIndexes.reservedMark
+    val first = heapElements(MinHeap.rootIndex)
+    hashTable.heapIndexes(hashTableIndexes(MinHeap.rootIndex)) = HashTableHeapIndexes.reservedMark
 
     sz -= 1
     heapElements(0) = heapElements(sz)
@@ -321,109 +318,6 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
     heapElements(sz) = null.asInstanceOf[T] // let GC reclaim memory
 
     first
-  }
-
-  /**
-   * The map which is part of this `MinHeapMap`.
-   */
-  object map {
-    private def updateIndex(hashTableIndex: Int, element: T, value: V): Locator = {
-      if (hashTable.isFree(hashTableIndex)) {
-        hashTable.keys(hashTableIndex) = element
-        hashTable.heapIndexes(hashTableIndex) = HashTableHeapIndexes.reservedMark
-      }
-      hashTable.values(hashTableIndex) = value
-      new Locator(hashTableIndex)
-    }
-
-    /**
-     * Inserts or updates the value associated with the element in the map. Operation is O(1) effective.
-     *
-     * @param element element acting as key in map.
-     * @param value   value associated to key in map.
-     * @return a locator that can later be used for fast access to the element both in the heap or in the map.
-     */
-    def update(element: T, value: V): Locator = {
-      val hashTableIndex = hashTable.indexOf(element)
-      updateIndex(hashTableIndex, element, value)
-    }
-
-    /**
-     * Inserts or updates the value associated with the element corresponding to provided locator in the map. Operation is O(1).
-     *
-     * @param locator locator of element acting as key in map.
-     * @param value   value associated to key in map.
-     */
-    def update(locator: Locator, value: V): Unit = {
-      val hashTableIndex = locator.index
-      if (hashTable.isFree(hashTableIndex)) {
-        hashTable.heapIndexes(hashTableIndex) = HashTableHeapIndexes.reservedMark
-      }
-      hashTable.values(hashTableIndex) = value
-    }
-
-    private def applyIndex(hashTableIndex: Int): V = {
-      assert(!hashTable.isFree(hashTableIndex), "apply: element for locator is not in map")
-      hashTable.values(hashTableIndex)
-    }
-
-    /**
-     * Returns value associated with provided element in map. Operation is O(1) effective.
-     *
-     * @param element element acting as key in map.
-     * @return value associated with provided element in map. Raises exception if element is not in map.
-     */
-    def apply(element: T): V = {
-      val hashTableIndex = hashTable.indexOf(element)
-      applyIndex(hashTableIndex)
-    }
-
-    /**
-     * Returns value associated with element corresponding to provided locator in map. Operation is O(1).
-     *
-     * @param locator locator of element acting as key in map.
-     * @return value associated with element corresponding to provided locator in map. Raises exception if element is
-     *         not in map.
-     */
-    def apply(locator: Locator): V = {
-      applyIndex(locator.index)
-    }
-
-    private def getIndex(hashTableIndex: Int): Option[V] = {
-      if (hashTable.isFree(hashTableIndex)) {
-        None
-      } else if (hashTable.isReserved(hashTableIndex)) {
-        val value = hashTable.values(hashTableIndex)
-        Option(value)
-      } else {
-        Some(hashTable.values(hashTableIndex))
-      }
-    }
-
-    /**
-     * Returns `Some(value)` where value is the one associated with provided element in map or `None` if element is
-     * not in map. Operation is O(1) effective.
-     *
-     * @param element element acting as key in map.
-     * @return `Some(value)` where value is the one associated with provided element in map or `None` if element is
-     *         not in map.
-     */
-    def get(element: T): Option[V] = {
-      val hashTableIndex = hashTable.indexOf(element)
-      getIndex(hashTableIndex)
-    }
-
-    /**
-     * Returns `Some(value)` where value is the one associated with element corresponding to provided locator in map
-     * or `None` if element is not in map. Operation is O(1).
-     *
-     * @param locator locator of element acting as key in map.
-     * @return `Some(value)` where value is the one associated with element corresponding to provided locator in map
-     *         or `None` if element is not in map.
-     */
-    def get(locator: Locator): Option[V] = {
-      getIndex(locator.index)
-    }
   }
 }
 

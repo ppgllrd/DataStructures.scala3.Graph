@@ -1,5 +1,7 @@
 package graph
 
+import data.structures.mutable.graph.{Edge, MapGraph, MapWeightedGraph, WeightedEdge}
+
 object Test extends App {
   val g = MapGraph[Int]()
   g.addVertex(1)

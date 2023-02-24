@@ -1,7 +1,6 @@
 package graph
 
-import collection.mutable.heap.MinHeapMap
-
+import data.structures.mutable.heap.MinHeapMap
 
 object MinHeap extends App {
   case class Element(key: Int, priority: Int)

@@ -1,6 +1,7 @@
 package graph
 
-import graph.shortestPaths.Dijkstra
+import data.structures.mutable.graph.MapWeightedGraph
+import data.structures.mutable.graph.shortestPaths.Dijkstra
 
 import scala.io.Source
 

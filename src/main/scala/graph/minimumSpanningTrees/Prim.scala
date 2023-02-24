@@ -1,6 +1,7 @@
 package graph.minimumSpanningTrees
 
 import collection.mutable
+import collection.mutable.heap.MinHeapMap
 import graph.{MapWeightedGraph, WeightedEdge, WeightedGraph}
 
 /**
@@ -25,7 +26,7 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
       minSpanningTree.addVertex(vertex)
 
       val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
-      val priorityQueue = mutable.MinHeapMap[WeightedEdge[V, W], Unit](using priority)
+      val priorityQueue = MinHeapMap[WeightedEdge[V, W], Unit](using priority)
 
       // add to priority queue edge incident to vertex with minimal cost
       val iterator = weightedGraph.successorsAndWeights(vertex).iterator

@@ -1,6 +1,6 @@
 package graph
 
-import collection.mutable.MinHeapMap
+import collection.mutable.heap.MinHeapMap
 
 
 object MinHeap extends App {

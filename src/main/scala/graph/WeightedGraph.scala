@@ -14,7 +14,7 @@ trait WeightedGraph[V, W, WE[_, _]] extends Graph[V, [X] =>> WE[X, W]] {
   def addEdge(vertex1: V, vertex2: V, weight: W): Boolean
 
   def weightOfEdge(vertex1: V, vertex2: V): Option[W]
-  
+
   /**
    * Returns a set with all vertices that are direct successors of vertex `vertex` and weights of corresponding 
    * weighted edges.

@@ -4,35 +4,30 @@ import collection.mutable.heap.{HashTableHeapIndexes, Locator}
 
 import scala.reflect.ClassTag
 
-/**
- * A locator can be used for fast access to elements stored in heap or map.
- */
-class Locator private[heap](val index: Int) extends AnyVal
-
 object MinHeap {
-  protected inline val rootIndex = 0
-  protected inline val defaultCapacity = 128
+  private inline val rootIndex = 0
+  private[heap] inline val defaultCapacity = 128
 
   /**
-   * Constructs a new `MinHeapMap`.
+   * Constructs a new `MinHeap`.
    *
    * @param initialCapacity initial capacity of heap. Will be expanded as needed.
    * @param priority        `Ordering` describing priorities of elements stored in heap.
    * @param classTagT       a class tag for type of elements stored in heap.
    * @tparam T Type of elements stored in heap.
-   * @return a new `MinHeapMap`.
+   * @return a new `MinHeap`.
    */
   def apply[T](initialCapacity: Int)(using priority: Ordering[T])(using classTagT: ClassTag[T])
   : MinHeap[T] =
     new MinHeap(initialCapacity)(using priority)(using classTagT)
 
   /**
-   * Constructs a new `MinHeapMap` using default capacity (Will be expanded as needed).
+   * Constructs a new `MinHeap` using default capacity (will be expanded as needed).
    *
    * @param priority  `Ordering` describing priorities of elements stored in heap.
    * @param classTagT a class tag for type of elements stored in heap.
    * @tparam T Type of elements stored in heap.
-   * @return a new `MinHeapMap`.
+   * @return a new `MinHeap`.
    */
   def apply[T](using priority: Ordering[T])(using classTagT: ClassTag[T]): MinHeap[T] =
     new MinHeap(defaultCapacity)(using priority)(using classTagT)
@@ -45,12 +40,8 @@ object MinHeap {
  * element the sooner it will be extracted from the heap. Once an element has been inserted, its priority can be
  * updated (by doing an insertion of an equal element with a different priority) and its position within the heap
  * will be adjusted accordingly.
- * Additionally this class also provides a map or dictionary from elements stored in the heap (acting as keys) to
- * values associated with them. This map is implemented by using a linear probing hash table which provides fast
- * insertions and lookups.
- * In order to locate an element in the heap (for updating its priority or for setting/retrieving its associated
- * value, a `Locator` can be used if several consecutive operations are going to be performed. This will speedup
- * those operations.
+ * In order to locate an element in the heap (for updating its priority) a `Locator` can be used if several consecutive
+ * operations are going to be performed. This will speedup those operations.
  *
  * @param initialCapacity initial capacity of heap. Will be expanded as needed.
  * @param priority        `Ordering` describing priorities of elements stored in heap.
@@ -68,7 +59,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
   }
 
   // the hash table for this heap
-  private val hashTable = new HashTableHeapIndexes[T](initialCapacity * 2)
+  protected val hashTable = new HashTableHeapIndexes[T](initialCapacity * 2)
 
   // elements in complete binary heap
   private var heapElements = new Array[T](initialCapacity)

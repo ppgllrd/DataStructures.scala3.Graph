@@ -38,7 +38,7 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
 
   private def run(): Unit =
     // map is going to store for each vertex cost of best known path and vertex before in such path
-    val sourcesAndCosts = priorityQueue.map
+    val sourcesAndCosts: collection.mutable.heap.Map[VertexAndCost, VertexAndCost] = priorityQueue.map
 
     val sourceAndCost = VertexAndCost(source, num.zero)
     // insert in heap source vertex and its optimal path cost (which is zero)

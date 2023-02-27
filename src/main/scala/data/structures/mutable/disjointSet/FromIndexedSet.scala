@@ -9,10 +9,8 @@ package data.structures.mutable.disjointSet
 
 import data.structures.mutable.disjointSet.indexedSet.IndexedSet
 
-private trait FromIndexedSet[A] {
+private trait FromIndexedSet[A](val indexedSet: IndexedSet[A]) {
   this: DisjointSet[A] =>
-
-  val indexedSet: IndexedSet[A]
 
   override val size: Int =
     indexedSet.size

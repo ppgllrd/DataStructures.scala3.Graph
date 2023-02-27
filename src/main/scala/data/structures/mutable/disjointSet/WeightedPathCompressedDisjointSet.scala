@@ -78,8 +78,6 @@ object WeightedPathCompressedDisjointSet {
    * @return a new disjoint set for provided elements.
    */
   def fromIndexedSet[A](indexedSet: IndexedSet[A]): WeightedPathCompressedDisjointSet[A] =
-    new WeightedPathCompressedDisjointSet[A] with FromIndexedSet[A] {
-      override val indexedSet: IndexedSet[A] = indexedSet
-    }
+    new FromIndexedSet[A](indexedSet) with WeightedPathCompressedDisjointSet[A]
 }
 

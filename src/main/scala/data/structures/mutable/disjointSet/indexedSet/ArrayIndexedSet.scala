@@ -21,7 +21,7 @@ object ArrayIndexedSet {
  * @author Pepe Gallardo.          
  */
 class ArrayIndexedSet[A](elements: Array[A]) extends IndexedSet[A] {
-  override def size: Int = elements.length
+  override val size: Int = elements.length
 
   private val indexes = {
     val map = scala.collection.mutable.Map[A, Int]()

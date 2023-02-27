@@ -3,7 +3,18 @@ package graph
 import data.structures.mutable.heap.MinHeapMap
 
 object MinHeap extends App {
-  case class Element(key: Int, priority: Int)
+  case class Element(val key: Int, val priority: Int) {
+    def canEqual(other: Any): Boolean = other.isInstanceOf[Element]
+
+    override def equals(other: Any): Boolean = other match {
+      case that: Element =>
+        (that canEqual this) && key == that.key
+      case _ => false
+    }
+
+    override def hashCode(): Int =
+      key.hashCode()
+  }
 
   val priority = Ordering.by[Element, Int](_.priority)
 
@@ -25,7 +36,7 @@ object MinHeap extends App {
 
   var prev = -1
   while (heap.nonEmpty) {
-    val x = heap.deleteFirst()
+    val x = heap.extractFirst()
     println(x.toString + " " + (x.priority >= prev))
     prev = x.priority
   }

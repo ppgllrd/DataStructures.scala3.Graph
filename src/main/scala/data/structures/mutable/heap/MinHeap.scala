@@ -48,11 +48,17 @@ object MinHeap {
  * @author Pepe Gallardo
  */
 class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classTagT: ClassTag[T]) {
-
   private def check(): Unit = {
     for (i <- 0 until sz) {
       assert(heapElements(i) == hashTable.keys(hashTableIndexes(i)),
         s"${heapElements(i)} ${hashTable.keys(hashTableIndexes(i))}")
+    }
+
+    for (i <- hashTable.heapIndexes.indices) {
+      if (hashTable.heapIndexes(i) >= 0) {
+        assert(heapElements(hashTable.heapIndexes(i)) == hashTable.keys(i),
+          s"${hashTable.heapIndexes(i)}  ${heapElements(hashTable.heapIndexes(i))} ${hashTable.keys(i)}")
+      }
     }
   }
 
@@ -219,7 +225,6 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    */
   private def insertIndex(hashTableIndex: Int, element: T): Unit = {
     ensureCapacity()
-
     val heapIndex = sz
     val inserted = hashTable.insert(hashTableIndex, element, heapIndex)
 
@@ -233,15 +238,9 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
       // locate already inserted element and update its priority
       val heapIndex = hashTable.heapIndexes(hashTableIndex)
       require(heapElements(heapIndex) == element, s"${heapElements(heapIndex)} $element")
-      val cmp = priority.compare(element, heapElements(heapIndex))
-
-      if (cmp < 0) {
-        heapElements(heapIndex) = element
-        heapifyUpFrom(heapIndex)
-      } else if (cmp > 0) {
-        heapElements(heapIndex) = element
-        heapifyDownFrom(heapIndex)
-      }
+      heapElements(heapIndex) = element
+      heapifyUpFrom(heapIndex)
+      heapifyDownFrom(heapIndex)
     }
   }
 
@@ -263,13 +262,109 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    * is O(log n).
    *
    * @param element element to insert in heap.
-   * @return a locator that can later be used for fast access to the element both in the heap or in the map.
+   * @return a locator that can later be used for fast access to the element.
    *
    */
   def insert(element: T): Locator = {
     val hashTableIndex = hashTableIndexFor(element)
     insertIndex(hashTableIndex, element)
     new Locator(hashTableIndex)
+  }
+
+  /**
+   * Increases an element that is already in the heap using the provided index of the element in the hash table. Does
+   * nothing if element is not in heap or if new value does not increase stored one.
+   *
+   * @param hashTableIndex index of the element in the hash table.
+   * @param element        element to increase in heap.
+   */
+  private def increaseIndex(hashTableIndex: Int, element: T): Boolean = {
+    var increased = false
+    if (hashTable.isInHeap(hashTableIndex)) {
+      // locate already inserted element and update its priority
+      val heapIndex = hashTable.heapIndexes(hashTableIndex)
+      require(heapElements(heapIndex) == element, s"${heapElements(heapIndex)} $element")
+
+      val cmp = priority.compare(element, heapElements(heapIndex))
+      if (cmp > 0) {
+        heapElements(heapIndex) = element
+        heapifyDownFrom(heapIndex)
+        increased = true
+      }
+    }
+    increased
+  }
+
+  /**
+   * Increases an element that is already in the heap using the provided locator of the element. Does nothing if element
+   * is not in heap or if new value does not increase stored one. Operation is O(log n).
+   *
+   * @param locator locator for accessing the element.
+   * @param element element to increase in heap.
+   */
+  def increase(locator: Locator, element: T): Boolean =
+    increaseIndex(locator.index, element)
+
+  /**
+   * Increases an element that is already in the heap. Does nothing if element is not in heap or if new value does not
+   * increase stored one. Operation is O(log n).
+   *
+   * @param element element to increase in heap.
+   * @return a locator that can later be used for fast access to the element.
+   *
+   */
+  def increase(element: T): (Boolean, Locator) = {
+    val hashTableIndex = hashTableIndexFor(element)
+    val increased = increaseIndex(hashTableIndex, element)
+    (increased, new Locator(hashTableIndex))
+  }
+
+  /**
+   * Decreases an element that is already in the heap using the provided index of the element in the hash table. Does
+   * nothing if element is not in heap or if new value does not decrease stored one.
+   *
+   * @param hashTableIndex index of the element in the hash table.
+   * @param element        element to increase in heap.
+   */
+  private def decreaseIndex(hashTableIndex: Int, element: T): Boolean = {
+    var decreased = false
+    if (hashTable.isInHeap(hashTableIndex)) {
+      // locate already inserted element and update its priority
+      val heapIndex = hashTable.heapIndexes(hashTableIndex)
+      require(heapElements(heapIndex) == element, s"${heapElements(heapIndex)} $element")
+
+      val cmp = priority.compare(element, heapElements(heapIndex))
+      if (cmp < 0) {
+        heapElements(heapIndex) = element
+        heapifyUpFrom(heapIndex)
+        decreased = true
+      }
+    }
+    decreased
+  }
+
+  /**
+   * Decreases an element that is already in the heap using the provided locator of the element. Does nothing if element
+   * is not in heap or if new value does not decrease stored one. Operation is O(log n).
+   *
+   * @param locator locator for accessing the element.
+   * @param element element to decrease in heap.
+   */
+  def decrease(locator: Locator, element: T): Boolean =
+    decreaseIndex(locator.index, element)
+
+  /**
+   * Decreases an element that is already in the heap. Does nothing if element is not in heap or if new value does not
+   * decrease stored one. Operation is O(log n).
+   *
+   * @param element element to decrease in heap.
+   * @return a locator that can later be used for fast access to the element.
+   *
+   */
+  def decrease(element: T): (Boolean, Locator) = {
+    val hashTableIndex = hashTableIndexFor(element)
+    val decreased = decreaseIndex(hashTableIndex, element)
+    (decreased, new Locator(hashTableIndex))
   }
 
   /**
@@ -285,28 +380,61 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
   }
 
   /**
+   * Returns a locator for accessing first element.
+   * @return a locator for accessing first element.
+   */
+  def locatorForFirst: Locator = {
+    if (sz < 1) {
+      throw new NoSuchElementException("locatorForFirst: heap is empty")
+    }
+    Locator(hashTableIndexes(MinHeap.rootIndex))
+  }
+  
+  /**
    * Returns the first element in the heap (the one with the smallest priority) and also removes such element from
    * heap. Operation is O(log n).
    *
    * @return the first element in the heap (the one with the smallest priority).
    */
-  def deleteFirst(): T = {
+  def extractFirst(): T = {
     if (sz < 1) {
-      throw new NoSuchElementException("deleteFirst: heap is empty")
+      throw new NoSuchElementException("extractFirst: heap is empty")
     }
     val first = heapElements(MinHeap.rootIndex)
     hashTable.heapIndexes(hashTableIndexes(MinHeap.rootIndex)) = HashTableHeapIndexes.reservedMark
 
     sz -= 1
-    heapElements(0) = heapElements(sz)
-    hashTableIndexes(0) = hashTableIndexes(sz)
-    hashTable.heapIndexes(hashTableIndexes(sz)) = 0
-
-    heapifyDownFrom(0)
-
+    if (sz > 0) {
+      heapElements(MinHeap.rootIndex) = heapElements(sz)
+      hashTableIndexes(MinHeap.rootIndex) = hashTableIndexes(sz)
+      hashTable.heapIndexes(hashTableIndexes(sz)) = MinHeap.rootIndex
+      heapifyDownFrom(MinHeap.rootIndex)
+    }
     heapElements(sz) = null.asInstanceOf[T] // let GC reclaim memory
-
     first
   }
+
+  private def containsIndex(hashTableIndex: Int): Boolean =
+    hashTable.isInHeap(hashTableIndex)
+
+  /**
+   * Checks whether an element is currently included in heap. Operation is O(1) effective.
+   *
+   * @param element element to check for inclusion.
+   * @return `true` if element is currently included in heap.
+   */
+  def contains(element: T): Boolean = {
+    val hashTableIndex = hashTableIndexFor(element)
+    containsIndex(hashTableIndex)
+  }
+
+  /**
+   * Checks whether an element is currently included in heap. Operation is O(1).
+   *
+   * @param locator locator referencing element to check for inclusion.
+   * @return `true` if element is currently included in heap.
+   */
+  def contains(locator: Locator): Boolean =
+    containsIndex(locator.index)
 }
 

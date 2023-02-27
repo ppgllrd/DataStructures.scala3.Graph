@@ -39,6 +39,9 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
   run()
 
   private def run(): Unit =
+    // number of destination vertices for which we yet have to find its shortest path
+    var numberOfDestinationsUnsolved = weightedGraph.order
+
     // map is going to store for each vertex cost of best known path and vertex before in such path
     val sourcesAndCosts: heap.Map[VertexAndCost, VertexAndCost] = priorityQueue.map
 
@@ -48,28 +51,35 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
     // record in map best known solution for vertex source
     sourcesAndCosts(locatorSource) = sourceAndCost
 
-    while (priorityQueue.nonEmpty)
-      val vertexAndCost@VertexAndCost(vertex, cost) = priorityQueue.deleteFirst()
-      val expand = sourcesAndCosts(vertexAndCost).cost == cost
+    while (priorityQueue.nonEmpty && numberOfDestinationsUnsolved > 0)
+      val firstLocator = priorityQueue.locatorForFirst
+      val VertexAndCost(vertex, cost) = priorityQueue.extractFirst()
+      val expand = sourcesAndCosts(firstLocator).cost == cost
       // If cost of element extracted from heap is the same best known cost for that vertex, this is
       // first extraction of vertex from PQ, hence it corresponds to its optimal cost, which
       // is already recorded in the map.
       // Now that we know optimal cost for vertex, let's compute alternative costs to its neighbours and
       // update if they improve current ones
       if (expand)
+        // we now know optimal path to vertex
+        numberOfDestinationsUnsolved -= 1
+
         for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
           val incidentLocator = priorityQueue.locatorFor(withKey(incident))
           val newCost = num.plus(cost, weight)
-          // if incident is not yet in heap or if new cost is better this is an improvement
-          val improvement =
-            sourcesAndCosts.get(incidentLocator)
-              .fold(true) { case VertexAndCost(_, cost) => ord.compare(newCost, cost) < 0 }
-          if (improvement)
-            // insert improved cost for incident
-            priorityQueue.insert(incidentLocator, VertexAndCost(incident, newCost))
-            // record in map this is now best known solution for incident and we are coming from vertex
-            // priorityQueue.map(incidentLocator) = VertexAndCost(vertex, newCost)
-            sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
+
+          sourcesAndCosts.get(incidentLocator) match
+            case None =>
+              // if incident is not yet in sourcesAndCosts insert vertex and found cost in heap
+              priorityQueue.insert(incidentLocator, VertexAndCost(incident, newCost))
+              // and record in map best known solution for incident
+              sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
+            case Some(cost) =>
+              // if incident is in sourcesAndCosts try to do a relaxation
+              if (priorityQueue.decrease(incidentLocator, VertexAndCost(incident, newCost))) {
+                // and record in map new best known solution for incident if relaxation was done
+                sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
+              }
 
   /**
    * Returns cost of shortest path from vertex `source` to vertex `destination`.

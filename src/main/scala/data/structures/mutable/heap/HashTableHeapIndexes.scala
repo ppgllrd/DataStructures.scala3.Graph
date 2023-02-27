@@ -36,6 +36,9 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int)(using classTag
   inline def isOccupied(inline index: Int): Boolean =
     !isFree(index)
 
+  inline def isInHeap(inline index: Int): Boolean =
+    heapIndexes(index) >= 0
+
   // number of cells which are occupied in hash table
   private var sz = 0
 

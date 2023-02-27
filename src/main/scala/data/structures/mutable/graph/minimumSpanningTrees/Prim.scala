@@ -22,6 +22,10 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
     val vertices = weightedGraph.vertices
 
     if (vertices.nonEmpty)
+      // a spanning tree should have order of the graph minus 1 vertices
+      val finalNumberOfEdges = weightedGraph.order - 1
+      var currentNumberOfEdges = 0
+
       // take one vertex and add it to spanning tree
       val vertex = vertices.head
       minSpanningTree.addVertex(vertex)
@@ -40,14 +44,15 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
             bestWeight = weight
         priorityQueue.insert(WeightedEdge(vertex, bestIncident, bestWeight))
 
-      while (priorityQueue.nonEmpty)
-        val weightedEdge = priorityQueue.deleteFirst()
+      while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges)
+        val weightedEdge = priorityQueue.extractFirst()
         val vertex = weightedEdge.vertex2
         if (!minSpanningTree.containsVertex(vertex))
           // vertex not in spanning tree yet. This edge is the one leading to it (from a vertex in spanning tree)
           // with minimal cost, hence we add vertex and edge to spanning tree
           minSpanningTree.addVertex(vertex)
           minSpanningTree.addEdge(weightedEdge)
+          currentNumberOfEdges += 1
 
           // compute alternative costs for all vertices incident to this one which are not yet in spanning tree and put
           // them in priority queue as they may improve previous known ones

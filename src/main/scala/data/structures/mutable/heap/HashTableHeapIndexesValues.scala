@@ -20,10 +20,9 @@ private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int, minHe
   var values = new Array[V](initialCapacity)
 
   // performs rehashing if current load factor exceeds maximum allowed one
-  protected override def rehashing(): Boolean = {
+  private[heap] override def rehashing(): Boolean = {
     var performed = false
     if (loadFactor > HashTableHeapIndexes.maximumLoadFactor) {
-      println("REHAS")
       val oldKeys = keys
       val oldHeapIndexes = heapIndexes
       val oldValues = values
@@ -35,7 +34,7 @@ private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int, minHe
           val index = indexOf(oldKeys(i))
           keys(index) = oldKeys(i)
           heapIndexes(index) = oldHeapIndexes(i)
-          if (oldHeapIndexes(i) >= 0)
+          if (isInHeap(oldHeapIndexes, i))
             minHeap.hashTableIndexes(oldHeapIndexes(i)) = index
           values(index) = oldValues(i)
         }

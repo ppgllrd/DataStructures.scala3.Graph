@@ -67,25 +67,14 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
    * The map which is part of this `MinHeapMap`.
    */
   object map extends Map[T, V] {
-    private def updateIndex(hashTableIndex: Int, element: T, value: V): Locator = {
-      if (hashTable.isFree(hashTableIndex)) {
-        hashTable.keys(hashTableIndex) = element
-        hashTable.heapIndexes(hashTableIndex) = HashTableHeapIndexes.reservedMark
-      }
+    def update(element: T, value: V): Locator = {
+      val hashTableIndex = hashTable.findOrReserve(element)
       hashTable.values(hashTableIndex) = value
       new Locator(hashTableIndex)
     }
 
-    def update(element: T, value: V): Locator = {
-      val hashTableIndex = hashTable.indexOf(element)
-      updateIndex(hashTableIndex, element, value)
-    }
-
     def update(locator: Locator, value: V): Unit = {
       val hashTableIndex = locator.index
-      if (hashTable.isFree(hashTableIndex)) {
-        hashTable.heapIndexes(hashTableIndex) = HashTableHeapIndexes.reservedMark
-      }
       hashTable.values(hashTableIndex) = value
     }
 

@@ -33,15 +33,18 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
   inline def isReserved(inline index: Int): Boolean =
     heapIndexes(index) == HashTableHeapIndexes.reservedMark
 
-  // a cell is ocupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
+  // a cell is occupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
   inline def isOccupied(inline index: Int): Boolean =
     !isFree(index)
 
-  inline def isInHeap(inline index: Int): Boolean =
+  inline def isInHeap(inline heapIndexes: Array[Int], inline index: Int): Boolean =
     heapIndexes(index) >= 0
 
+  inline def isInHeap(inline index: Int): Boolean =
+    isInHeap(heapIndexes, index)
+
   // number of cells which are occupied in hash table
-  private[heap] var sz = 0
+  private var sz = 0
 
   // computes hash of an element
   private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
@@ -59,7 +62,7 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
   protected def loadFactor: Double = sz.toDouble / keys.length
 
   // performs rehashing if current load factor exceeds maximum allowed one
-  protected def rehashing(): Boolean = {
+  private[heap] def rehashing(): Boolean = {
     var performed = false
     if (loadFactor > HashTableHeapIndexes.maximumLoadFactor) {
       val oldKeys = keys
@@ -71,7 +74,7 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
           val index = indexOf(oldKeys(i))
           keys(index) = oldKeys(i)
           heapIndexes(index) = oldHeapIndexes(i)
-          if(oldHeapIndexes(i) >= 0)
+          if(isInHeap(oldHeapIndexes, i))
             minHeap.hashTableIndexes(oldHeapIndexes(i)) = index
         }
       }
@@ -89,15 +92,41 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
    * @return `true` if element was inserted or `false` if element was already in hash table.
    */
   def insert(index: Int, key: T, heapIndex: Int): Boolean = {
-    rehashing()
-
     var inserted = false
+    if(isFree(index))
+      sz += 1
     if (isFree(index) || isReserved(index)) {
       keys(index) = key
       heapIndexes(index) = heapIndex
       inserted = true
-      sz += 1
     }
     inserted
+  }
+
+  def insert(key: T, heapIndex: Int): (Boolean, Int) = {
+    rehashing()
+
+    val index = indexOf(key)
+    var inserted = false
+    if (isFree(index))
+      sz += 1
+    if (isFree(index) || isReserved(index)) {
+      keys(index) = key
+      heapIndexes(index) = heapIndex
+      inserted = true
+    }
+    (inserted, index)
+  }
+
+
+  def findOrReserve(element: T): Int = {
+    rehashing()
+    val index = indexOf(element)
+    if (isFree(index)) {
+      keys(index) = element
+      heapIndexes(index) = HashTableHeapIndexes.reservedMark
+      sz += 1
+    }
+    index
   }
 }

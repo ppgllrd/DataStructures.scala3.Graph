@@ -31,7 +31,7 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
       minSpanningTree.addVertex(vertex)
 
       val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
-      val priorityQueue = MinHeap[WeightedEdge[V, W]]/*(weightedGraph.size)*/(using priority)
+      val priorityQueue = MinHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
 
       // add to priority queue edge incident to vertex with minimal cost
       val iterator = weightedGraph.successorsAndWeights(vertex).iterator

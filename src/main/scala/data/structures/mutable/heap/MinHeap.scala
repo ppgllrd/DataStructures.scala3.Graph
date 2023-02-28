@@ -197,15 +197,8 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    * @param element a heap element
    * @return a locator for provided heap element.
    */
-  def locatorFor(element: T): Locator = {
-    val hashTableIndex = hashTableIndexFor(element)
-    if (hashTable.isFree(hashTableIndex)) {
-      hashTable.keys(hashTableIndex) = element
-      hashTable.heapIndexes(hashTableIndex) = HashTableHeapIndexes.reservedMark
-      hashTable.sz += 1  // todo may need rehashing
-    }
-    new Locator(hashTableIndex)
-  }
+  def locatorFor(element: T): Locator =
+    new Locator(hashTable.findOrReserve(element))
 
   /**
    * Expands arrays if we run out of capacity due to too much insertions.
@@ -219,15 +212,48 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
   }
 
   /**
-   * Inserts an element in the heap using the provided index of the element in the hash table.
+   * Inserts an element in the heap using the provided locator of the element. If the element was already in the heap
+   * this operation can be used to update its priority within the heap (the element should be `equal` to previous one
+   * but its `priority` can be different). Operation is O(log n).
    *
-   * @param hashTableIndex index of the element in the hash table.
-   * @param element        element to insert in heap.
+   * @param locator locator for accessing the element.
+   * @param element element to insert in heap.
    */
-  private def insertIndex(hashTableIndex: Int, element: T): Unit = {
+  def insert(locator: Locator, element: T): Unit =
     ensureCapacity()
+    val hashTableIndex = locator.index
     val heapIndex = sz
     val inserted = hashTable.insert(hashTableIndex, element, heapIndex)
+
+    if (inserted) {
+      // insert new element in heap
+      heapElements(heapIndex) = element
+      hashTableIndexes(heapIndex) = hashTableIndex
+      heapifyUpFrom(heapIndex)
+      sz += 1
+    } else {
+      // locate already inserted element and update its priority
+      val heapIndex = hashTable.heapIndexes(hashTableIndex)
+      require(heapElements(heapIndex) == element, s"${heapElements(heapIndex)} $element")
+      heapElements(heapIndex) = element
+      heapifyUpFrom(heapIndex)
+      heapifyDownFrom(heapIndex)
+    }
+
+  /**
+   * Inserts an element in the heap returning a locator that can later be used for fast access to the element both in
+   * the heap or in the map. If the element was already in the heap this operation can be used to update its priority
+   * within the heap (the element should be `equal` to previous one but its `priority` can be different). Operation
+   * is O(log n).
+   *
+   * @param element element to insert in heap.
+   * @return a locator that can later be used for fast access to the element.
+   *
+   */
+  def insert(element: T): Locator = {
+    ensureCapacity()
+    val heapIndex = sz
+    val (inserted, hashTableIndex) = hashTable.insert(element, heapIndex)
 
     //todo hashTable.insert may lead to rehashing and then hashTableIndex is wrong
     if (inserted) {
@@ -244,32 +270,6 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
       heapifyUpFrom(heapIndex)
       heapifyDownFrom(heapIndex)
     }
-  }
-
-  /**
-   * Inserts an element in the heap using the provided locator of the element. If the element was already in the heap
-   * this operation can be used to update its priority within the heap (the element should be `equal` to previous one
-   * but its `priority` can be different). Operation is O(log n).
-   *
-   * @param locator locator for accessing the element.
-   * @param element element to insert in heap.
-   */
-  def insert(locator: Locator, element: T): Unit =
-    insertIndex(locator.index, element)
-
-  /**
-   * Inserts an element in the heap returning a locator that can later be used for fast access to the element both in
-   * the heap or in the map. If the element was already in the heap this operation can be used to update its priority
-   * within the heap (the element should be `equal` to previous one but its `priority` can be different). Operation
-   * is O(log n).
-   *
-   * @param element element to insert in heap.
-   * @return a locator that can later be used for fast access to the element.
-   *
-   */
-  def insert(element: T): Locator = {
-    val hashTableIndex = hashTableIndexFor(element)
-    insertIndex(hashTableIndex, element)
     new Locator(hashTableIndex)
   }
 

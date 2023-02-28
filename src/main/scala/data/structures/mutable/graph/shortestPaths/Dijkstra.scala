@@ -35,7 +35,7 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
   private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
 
   private val priority = Ordering.by((vertexAndCost: VertexAndCost) => vertexAndCost.cost)
-  private val priorityQueue = MinHeapMap[VertexAndCost, VertexAndCost]/*(weightedGraph.order)*/(using priority)
+  private val priorityQueue = MinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
   run()
 
   private def run(): Unit =
@@ -46,6 +46,7 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
     val sourcesAndCosts: heap.Map[VertexAndCost, VertexAndCost] = priorityQueue.map
 
     val sourceAndCost = VertexAndCost(source, num.zero)
+
     // insert in heap source vertex and its optimal path cost (which is zero)
     val locatorSource = priorityQueue.insert(sourceAndCost)
     // record in map best known solution for vertex source
@@ -53,8 +54,8 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
 
     while (priorityQueue.nonEmpty && numberOfDestinationsUnsolved > 0)
       val firstLocator = priorityQueue.locatorForFirst
-      val vertexAndCost@VertexAndCost(vertex, cost) = priorityQueue.extractFirst()
-      val expand = sourcesAndCosts(vertexAndCost).cost == cost
+      val VertexAndCost(vertex, cost) = priorityQueue.extractFirst()
+      val expand = sourcesAndCosts(firstLocator).cost == cost
       // If cost of element extracted from heap is the same best known cost for that vertex, this is
       // first extraction of vertex from PQ, hence it corresponds to its optimal cost, which
       // is already recorded in the map.
@@ -70,10 +71,10 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
 
           sourcesAndCosts.get(incidentLocator) match
             case None =>
-              // and record in map best known solution for incident
+              // if incident is not yet in sourcesAndCosts record in map best known solution for incident
               sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
-              // if incident is not yet in sourcesAndCosts insert vertex and found cost in heap
-              priorityQueue.insert(VertexAndCost(incident, newCost))
+              // and insert vertex and found cost in heap
+              priorityQueue.insert(incidentLocator, VertexAndCost(incident, newCost))
 
             case Some(cost) =>
               // if incident is in sourcesAndCosts try to do a relaxation

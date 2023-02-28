@@ -3,7 +3,7 @@ package graph
 import data.structures.mutable.graph.MapWeightedGraph
 import data.structures.mutable.graph.minimumSpanningTrees.Prim
 
-object PrimTest extends App {
+@main def PrimTest1(): Unit = {
   val wg = new MapWeightedGraph[Char, Int]()
   wg.addVertex('a')
   wg.addVertex('b')
@@ -21,4 +21,29 @@ object PrimTest extends App {
 
   val prim = new Prim(wg)
   println(prim.minimumSpanningTree.edges)
+}
+
+@main def PrimTest2(): Unit = {
+  val order = 100000
+  val size = 5000000
+
+  val rnd = scala.util.Random()
+
+  val wg = new MapWeightedGraph[Int, Double]()
+  for (vertex <- 0 until order) {
+    wg.addVertex(vertex)
+  }
+
+  for (_ <- 0 until size) {
+    val v1 = rnd.nextInt(wg.order)
+    val v2 = rnd.nextInt(wg.order)
+    val w = 1000 * rnd.nextDouble()
+    wg.addEdge(v1, v2, w)
+  }
+
+  val t0 = System.currentTimeMillis()
+  val prim = new Prim(wg)
+  val t1 = System.currentTimeMillis()
+  val seconds = (t1 - t0) / 1000.0
+  println(s"Graph with $order vertices and $size edges solved in $seconds seconds")
 }

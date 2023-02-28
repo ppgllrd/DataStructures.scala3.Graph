@@ -62,15 +62,15 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
     }
   }
 
-  // the hash table for this heap
-  protected val hashTable = new HashTableHeapIndexes[T](initialCapacity * 2)
-
   // elements in complete binary heap
   private var heapElements = new Array[T](initialCapacity)
 
   // indexes in hash table for each element in heap
-  private var hashTableIndexes = new Array[Int](initialCapacity)
+  private[heap] var hashTableIndexes = new Array[Int](initialCapacity)
   private var sz = 0
+
+  // the hash table for this heap
+  protected val hashTable = new HashTableHeapIndexes[T](initialCapacity * 2, this)
 
   // returns index of parent node in heap
   private inline def parentIndexOf(inline index: Int): Int =
@@ -202,6 +202,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
     if (hashTable.isFree(hashTableIndex)) {
       hashTable.keys(hashTableIndex) = element
       hashTable.heapIndexes(hashTableIndex) = HashTableHeapIndexes.reservedMark
+      hashTable.sz += 1  // todo may need rehashing
     }
     new Locator(hashTableIndex)
   }
@@ -228,6 +229,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
     val heapIndex = sz
     val inserted = hashTable.insert(hashTableIndex, element, heapIndex)
 
+    //todo hashTable.insert may lead to rehashing and then hashTableIndex is wrong
     if (inserted) {
       // insert new element in heap
       heapElements(heapIndex) = element
@@ -389,7 +391,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
     }
     Locator(hashTableIndexes(MinHeap.rootIndex))
   }
-  
+
   /**
    * Returns the first element in the heap (the one with the smallest priority) and also removes such element from
    * heap. Operation is O(log n).
@@ -411,6 +413,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
       heapifyDownFrom(MinHeap.rootIndex)
     }
     heapElements(sz) = null.asInstanceOf[T] // let GC reclaim memory
+    hashTableIndexes(sz) = HashTableHeapIndexes.freeMark
     first
   }
 

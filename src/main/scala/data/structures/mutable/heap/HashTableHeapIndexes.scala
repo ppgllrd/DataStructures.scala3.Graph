@@ -17,7 +17,8 @@ object HashTableHeapIndexes {
  * @tparam T Type of elements stored in heap.
  * @author Pepe Gallardo
  */
-private[heap] class HashTableHeapIndexes[T](initialCapacity: Int)(using classTagT: ClassTag[T]) {
+private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHeap[T])(using
+  classTagT: ClassTag[T]) {
   // elements in heap which are also keys in dictionary
   var keys = new Array[T](initialCapacity)
   // indexes for locating each element in heap
@@ -40,7 +41,7 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int)(using classTag
     heapIndexes(index) >= 0
 
   // number of cells which are occupied in hash table
-  private var sz = 0
+  private[heap] var sz = 0
 
   // computes hash of an element
   private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
@@ -70,6 +71,8 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int)(using classTag
           val index = indexOf(oldKeys(i))
           keys(index) = oldKeys(i)
           heapIndexes(index) = oldHeapIndexes(i)
+          if(oldHeapIndexes(i) >= 0)
+            minHeap.hashTableIndexes(oldHeapIndexes(i)) = index
         }
       }
       performed = true
@@ -96,11 +99,5 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int)(using classTag
       sz += 1
     }
     inserted
-  }
-
-  def insert(key: T, heapIndex: Int): (Int, Boolean) = {
-    val index = indexOf(key)
-    val inserted = insert(index, key, heapIndex)
-    (index, inserted)
   }
 }

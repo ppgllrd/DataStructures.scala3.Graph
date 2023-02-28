@@ -34,7 +34,7 @@ class Kruskal[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord:
       val disjointSet = DisjointSet.fromIndexedSet(indexedSet)
 
       val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
-      val priorityQueue = MinHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
+      val priorityQueue = MinHeap[WeightedEdge[V, W]]/*(weightedGraph.size)*/(using priority)
       for(weightedEdge <- weightedGraph.edges)
         priorityQueue.insert(weightedEdge)
 

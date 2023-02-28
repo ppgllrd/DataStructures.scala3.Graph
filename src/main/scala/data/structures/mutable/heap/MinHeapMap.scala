@@ -61,7 +61,7 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
 
   // the hash table for this heap map
   override protected val hashTable: HashTableHeapIndexesValues[T, V] =
-    new HashTableHeapIndexesValues[T, V](initialCapacity * 2)
+    new HashTableHeapIndexesValues[T, V](initialCapacity * 2, this)
 
   /**
    * The map which is part of this `MinHeapMap`.

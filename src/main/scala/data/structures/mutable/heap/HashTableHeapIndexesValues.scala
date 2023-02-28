@@ -13,8 +13,8 @@ import scala.reflect.ClassTag
  * @tparam V Type of values associated in map.
  * @author Pepe Gallardo
  */
-private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int)(using classTagT: ClassTag[T])(using classTagV: ClassTag[V])
-  extends HashTableHeapIndexes[T](initialCapacity)(using classTagT) {
+private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int, minHeap: MinHeap[T])(using classTagT: ClassTag[T])(using classTagV: ClassTag[V])
+  extends HashTableHeapIndexes[T](initialCapacity, minHeap)(using classTagT) {
 
   // values associated to each key in dictionary
   var values = new Array[V](initialCapacity)
@@ -23,6 +23,7 @@ private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int)(using
   protected override def rehashing(): Boolean = {
     var performed = false
     if (loadFactor > HashTableHeapIndexes.maximumLoadFactor) {
+      println("REHAS")
       val oldKeys = keys
       val oldHeapIndexes = heapIndexes
       val oldValues = values
@@ -34,6 +35,8 @@ private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int)(using
           val index = indexOf(oldKeys(i))
           keys(index) = oldKeys(i)
           heapIndexes(index) = oldHeapIndexes(i)
+          if (oldHeapIndexes(i) >= 0)
+            minHeap.hashTableIndexes(oldHeapIndexes(i)) = index
           values(index) = oldValues(i)
         }
       }

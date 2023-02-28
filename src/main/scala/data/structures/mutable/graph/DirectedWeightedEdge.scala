@@ -42,6 +42,6 @@ object DirectedWeightedEdge {
   def apply[V, W](source: V, destination: V, weight: W): DirectedWeightedEdge[V, W] =
     new DirectedWeightedEdge[V, W](source, destination, weight)
 
-  def unapply[V, W](directedWeightedEdge: DirectedWeightedEdge[V, W]): Option[(V, V, W)] =
-    Some(directedWeightedEdge.source, directedWeightedEdge.destination, directedWeightedEdge.weight)
+  def unapply[V, W](directedWeightedEdge: DirectedWeightedEdge[V, W]): (V, V, W) =
+    (directedWeightedEdge.source, directedWeightedEdge.destination, directedWeightedEdge.weight)
 }

@@ -137,6 +137,7 @@ import scala.io.Source
         val costs = for (vertex <- wg.vertices.toList.sorted) yield dijkstra.lowestCostTo(vertex)
         println(costs)
         assert(costs.mkString(" ") == solution)
+      case _ => sys.error("wrong problem format")
   }
 
   solve(p1, s1)

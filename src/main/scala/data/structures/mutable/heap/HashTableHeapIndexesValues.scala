@@ -26,9 +26,11 @@ private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int, minHe
       val oldKeys = keys
       val oldHeapIndexes = heapIndexes
       val oldValues = values
+      val oldLocatorIndexes = locatorIndexes
       keys = new Array[T](keys.length * 2)
       heapIndexes = Array.fill[Int](heapIndexes.length * 2)(HashTableHeapIndexes.freeMark)
       values = new Array[V](values.length * 2)
+      locatorIndexes = Array.fill[Int](locatorIndexes.length * 2)(HashTableHeapIndexes.noLocator)
       for (i <- oldKeys.indices) {
         if (oldHeapIndexes(i) != HashTableHeapIndexes.freeMark) {
           val index = indexOf(oldKeys(i))
@@ -36,6 +38,8 @@ private[heap] class HashTableHeapIndexesValues[T, V](initialCapacity: Int, minHe
           heapIndexes(index) = oldHeapIndexes(i)
           if (isInHeap(oldHeapIndexes, i))
             minHeap.hashTableIndexes(oldHeapIndexes(i)) = index
+          locatorIndexes(index) = oldLocatorIndexes(i)
+          minHeap.locators(locatorIndexes(index)) = index  
           values(index) = oldValues(i)
         }
       }

@@ -21,6 +21,7 @@ import data.structures.mutable.graph.minimumSpanningTrees.Kruskal
 
   val kruskal = new Kruskal(wg)
   println(kruskal.minimumSpanningTree.edges)
+  println(kruskal.minimumSpanningTree.edges.map(_.weight).sum)
 }
 
 

@@ -21,6 +21,7 @@ import data.structures.mutable.graph.minimumSpanningTrees.Prim
 
   val prim = new Prim(wg)
   println(prim.minimumSpanningTree.edges)
+  println(prim.minimumSpanningTree.edges.map(_.weight).sum)
 }
 
 @main def PrimTest2(): Unit = {

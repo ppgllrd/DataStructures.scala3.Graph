@@ -5,6 +5,7 @@ import scala.reflect.ClassTag
 object HashTableHeapIndexes {
   private[heap] inline val freeMark = -1
   private[heap] inline val reservedMark = -2
+  private[heap] inline val noLocator = -2
 
   private[heap] inline val maximumLoadFactor = 0.5
 }
@@ -24,9 +25,15 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
   // indexes for locating each element in heap
   var heapIndexes: Array[Int] = Array.fill[Int](initialCapacity)(HashTableHeapIndexes.freeMark)
 
+  // indexes into array buffer of locators for a locator corresponding to each key
+  var locatorIndexes: Array[Int] = Array.fill[Int](initialCapacity)(HashTableHeapIndexes.noLocator)
+
   // initially all cells are free
+  inline def isFree(inline array: Array[Int], inline index: Int): Boolean =
+    array(index) == HashTableHeapIndexes.freeMark
+
   inline def isFree(inline index: Int): Boolean =
-    heapIndexes(index) == HashTableHeapIndexes.freeMark
+    isFree(heapIndexes, index)
 
   // a cell is reserved if it stores an element that was extracted from heap or if it is reserved for inserting an
   // element that has already an associated locator
@@ -37,11 +44,15 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
   inline def isOccupied(inline index: Int): Boolean =
     !isFree(index)
 
-  inline def isInHeap(inline heapIndexes: Array[Int], inline index: Int): Boolean =
-    heapIndexes(index) >= 0
+  inline def isInHeap(inline array: Array[Int], inline index: Int): Boolean =
+    array(index) >= 0
 
   inline def isInHeap(inline index: Int): Boolean =
     isInHeap(heapIndexes, index)
+
+  // key with provided index has not yet a locator
+  inline def noLocator(inline index: Int): Boolean =
+    locatorIndexes(index) == HashTableHeapIndexes.noLocator
 
   // number of cells which are occupied in hash table
   private var sz = 0
@@ -67,8 +78,10 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
     if (loadFactor > HashTableHeapIndexes.maximumLoadFactor) {
       val oldKeys = keys
       val oldHeapIndexes = heapIndexes
+      val oldLocatorIndexes = locatorIndexes
       keys = new Array[T](keys.length * 2)
       heapIndexes = Array.fill[Int](heapIndexes.length * 2)(HashTableHeapIndexes.freeMark)
+      locatorIndexes = Array.fill[Int](locatorIndexes.length * 2)(HashTableHeapIndexes.noLocator)
       for (i <- oldKeys.indices) {
         if (oldHeapIndexes(i) != HashTableHeapIndexes.freeMark) {
           val index = indexOf(oldKeys(i))
@@ -76,6 +89,8 @@ private[heap] class HashTableHeapIndexes[T](initialCapacity: Int, minHeap: MinHe
           heapIndexes(index) = oldHeapIndexes(i)
           if(isInHeap(oldHeapIndexes, i))
             minHeap.hashTableIndexes(oldHeapIndexes(i)) = index
+          locatorIndexes(index) = oldLocatorIndexes(i)
+          minHeap.locators(locatorIndexes(index)) = index
         }
       }
       performed = true

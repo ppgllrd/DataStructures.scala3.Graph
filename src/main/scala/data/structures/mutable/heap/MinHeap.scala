@@ -1,5 +1,6 @@
 package data.structures.mutable.heap
 
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 object MinHeap {
@@ -71,6 +72,9 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
 
   // the hash table for this heap
   protected val hashTable = new HashTableHeapIndexes[T](initialCapacity * 2, this)
+
+  // each locator has an index into the hash table for the corresponding located element
+  private[heap] val locators = new ArrayBuffer[Int]()
 
   // returns index of parent node in heap
   private inline def parentIndexOf(inline index: Int): Int =
@@ -190,6 +194,21 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
   private def hashTableIndexFor(element: T): Int =
     hashTable.indexOf(element)
 
+  protected def locatorFor(hashTableIndex: Int): Locator = {
+    val locatorIndex = hashTable.locatorIndexes(hashTableIndex)
+    if (locatorIndex == HashTableHeapIndexes.noLocator) {
+      // allocate a new Locator
+      val locatorIndex = locators.length
+      locators.addOne(hashTableIndex)
+      // and record its index in locatorIndexes
+      hashTable.locatorIndexes(hashTableIndex) = locatorIndex
+      new Locator(locatorIndex)
+    } else {
+      // use already existing locator
+      new Locator(locatorIndex)
+    }
+  }
+
   /**
    * Returns a locator for provided heap element. A locator can later be used for fast access to the element both in
    * the heap and in the map. Operation is O(1) effective.
@@ -197,8 +216,13 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    * @param element a heap element
    * @return a locator for provided heap element.
    */
-  def locatorFor(element: T): Locator =
-    new Locator(hashTable.findOrReserve(element))
+  def locatorFor(element: T): Locator = {
+    val hashTableIndex = hashTable.findOrReserve(element)
+    locatorFor(hashTableIndex)
+  }
+
+  protected def hashTableIndexFor(locator: Locator): Int =
+    locators(locator.index)
 
   /**
    * Expands arrays if we run out of capacity due to too much insertions.
@@ -221,7 +245,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    */
   def insert(locator: Locator, element: T): Unit =
     ensureCapacity()
-    val hashTableIndex = locator.index
+    val hashTableIndex = hashTableIndexFor(locator)
     val heapIndex = sz
     val inserted = hashTable.insert(hashTableIndex, element, heapIndex)
 
@@ -255,7 +279,6 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
     val heapIndex = sz
     val (inserted, hashTableIndex) = hashTable.insert(element, heapIndex)
 
-    //todo hashTable.insert may lead to rehashing and then hashTableIndex is wrong
     if (inserted) {
       // insert new element in heap
       heapElements(heapIndex) = element
@@ -270,7 +293,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
       heapifyUpFrom(heapIndex)
       heapifyDownFrom(heapIndex)
     }
-    new Locator(hashTableIndex)
+    locatorFor(hashTableIndex)
   }
 
   /**
@@ -305,7 +328,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    * @param element element to increase in heap.
    */
   def increase(locator: Locator, element: T): Boolean =
-    increaseIndex(locator.index, element)
+    increaseIndex(hashTableIndexFor(locator), element)
 
   /**
    * Increases an element that is already in the heap. Does nothing if element is not in heap or if new value does not
@@ -318,7 +341,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
   def increase(element: T): (Boolean, Locator) = {
     val hashTableIndex = hashTableIndexFor(element)
     val increased = increaseIndex(hashTableIndex, element)
-    (increased, new Locator(hashTableIndex))
+    (increased, locatorFor(hashTableIndex))
   }
 
   /**
@@ -353,7 +376,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    * @param element element to decrease in heap.
    */
   def decrease(locator: Locator, element: T): Boolean =
-    decreaseIndex(locator.index, element)
+    decreaseIndex(hashTableIndexFor(locator), element)
 
   /**
    * Decreases an element that is already in the heap. Does nothing if element is not in heap or if new value does not
@@ -366,7 +389,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
   def decrease(element: T): (Boolean, Locator) = {
     val hashTableIndex = hashTableIndexFor(element)
     val decreased = decreaseIndex(hashTableIndex, element)
-    (decreased, new Locator(hashTableIndex))
+    (decreased, locatorFor(hashTableIndex))
   }
 
   /**
@@ -389,7 +412,7 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
     if (sz < 1) {
       throw new NoSuchElementException("locatorForFirst: heap is empty")
     }
-    Locator(hashTableIndexes(MinHeap.rootIndex))
+    locatorFor(hashTableIndexes(MinHeap.rootIndex))
   }
 
   /**
@@ -438,6 +461,6 @@ class MinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classT
    * @return `true` if element is currently included in heap.
    */
   def contains(locator: Locator): Boolean =
-    containsIndex(locator.index)
+    containsIndex(hashTableIndexFor(locator))
 }
 

@@ -71,10 +71,10 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
 
           sourcesAndCosts.get(incidentLocator) match
             case None =>
-              // if incident is not yet in sourcesAndCosts record in map best known solution for incident
-              sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
-              // and insert vertex and found cost in heap
+              // if incident is not yet in sourcesAndCosts insert vertex and found cost in heap
               priorityQueue.insert(incidentLocator, VertexAndCost(incident, newCost))
+              // and record in map best known solution for incident
+              sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
 
             case Some(cost) =>
               // if incident is in sourcesAndCosts try to do a relaxation

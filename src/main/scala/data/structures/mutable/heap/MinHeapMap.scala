@@ -70,11 +70,11 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
     def update(element: T, value: V): Locator = {
       val hashTableIndex = hashTable.findOrReserve(element)
       hashTable.values(hashTableIndex) = value
-      new Locator(hashTableIndex)
+      locatorFor(hashTableIndex)
     }
 
     def update(locator: Locator, value: V): Unit = {
-      val hashTableIndex = locator.index
+      val hashTableIndex = hashTableIndexFor(locator)
       hashTable.values(hashTableIndex) = value
     }
 
@@ -89,7 +89,7 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
     }
 
     def apply(locator: Locator): V = {
-      applyIndex(locator.index)
+      applyIndex(hashTableIndexFor(locator))
     }
 
     private def getIndex(hashTableIndex: Int): Option[V] = {
@@ -109,7 +109,7 @@ class MinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
     }
 
     def get(locator: Locator): Option[V] = {
-      getIndex(locator.index)
+      getIndex(hashTableIndexFor(locator))
     }
   }
 }

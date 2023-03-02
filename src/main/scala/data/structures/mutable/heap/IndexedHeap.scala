@@ -50,58 +50,101 @@ object IndexedHeap {
  * @author Pepe Gallardo
  */
 class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using classTagT: ClassTag[T]) {
-  private def check(): Unit = {
-    /*
-    for (i <- 0 until sz) {
-      assert(heapElementsLocators(i) == hashTable.keys(hashTableIndexes(i)),
-        s"${heapElementsLocators(i)} ${hashTable.keys(hashTableIndexes(i))}")
-    }
-    */
-
-    for (i <- hashTable.heapIndexes.indices) {
-      if (hashTable.heapIndexes(i) >= 0) {
-        assert(heapElementsLocators(hashTable.heapIndexes(i)) == hashTable.keys(i),
-          s"${hashTable.heapIndexes(i)}  ${heapElementsLocators(hashTable.heapIndexes(i))} ${hashTable.keys(i)}")
-      }
-    }
-  }
-
+  // the hash table for this heap
+  protected val hashTable = new HashTable[T](initialCapacity * 2)
   // locators for elements in complete binary heap
   private var heapElementsLocators = new Array[Int](initialCapacity)
 
   private var sz = 0
 
-  // the hash table for this heap
-  protected val hashTable = new HashTable[T](initialCapacity * 2)
+  /**
+   * Checks if heap stores no elements.
+   *
+   * @return `true` if heap stores no elements.
+   */
+  def isEmpty: Boolean = sz <= 0
 
-  // returns index of parent node in heap
-  private inline def parentIndexOf(inline index: Int): Int =
-    (index - 1) / 2
+  /**
+   * Checks if heap stores at least one element.
+   *
+   * @return `true` if heap stores at least one element.
+   */
+  def nonEmpty: Boolean = sz > 0
 
-  // returns index of left child node in heap
-  private inline def leftChildIndexOf(inline index: Int): Int =
-    index * 2 + 1
+  /**
+   * Returns a locator for provided heap element. A locator can later be used for fast access to the element both in
+   * the heap and in the map. Operation is O(1) effective.
+   *
+   * @param element a heap element
+   * @return a locator for provided heap element.
+   */
+  def locatorFor(element: T): Locator =
+    hashTable.locatorFor(element)
 
-  // checks if an index corresponds to an element in heap
-  private inline def isValidIndex(inline index: Int): Boolean =
-    index < sz
+  private def insert(hashTableIndex: Int, element: T): Int = {
+    ensureCapacity()
+    val heapIndex = sz
+    val (inserted, locatorIndex) = hashTable.insert(hashTableIndex, element, heapIndex)
 
-  // checks if an element is not the root of heap
-  private inline def hasParentIndex(inline index: Int): Boolean =
-    index > IndexedHeap.rootIndex
+    if (inserted) {
+      // insert new element in heap
+      heapElementsLocators(heapIndex) = locatorIndex
+      heapifyUpFrom(heapIndex)
+      sz += 1
+    } else {
+      // locate already inserted element and update its priority
+      val heapIndex = hashTable.heapIndexes(hashTableIndex)
+      // require(keyFor(heapIndex) == element, s"${keyFor(heapIndex)} $element")
+      // heapElementsLocators(heapIndex) = locatorIndex
+      heapifyUpFrom(heapIndex)
+      heapifyDownFrom(heapIndex)
+    }
+    locatorIndex
+  }
 
-  private def keyFor(index: Int): T =
-    hashTable.keyForLocator(heapElementsLocators(index))
+  /**
+   * Inserts an element in the heap using the provided locator of the element. If the element was already in the heap
+   * this operation can be used to update its priority within the heap (the element should be `equal` to previous one
+   * but its `priority` can be different). Operation is O(log n).
+   *
+   * @param locator locator for accessing the element.
+   * @param element element to insert in heap.
+   */
+  @targetName("insertLocator")
+  def insert(locator: Locator, element: T): Unit =
+    insert(locator.index, element)
 
-  private def hashTableIndexFor(element: T): Int =
-    hashTable.searchIndexOf(element)
+  /**
+   * Inserts an element in the heap returning a locator that can later be used for fast access to the element both in
+   * the heap or in the map. If the element was already in the heap this operation can be used to update its priority
+   * within the heap (the element should be `equal` to previous one but its `priority` can be different). Operation
+   * is O(log n).
+   *
+   * @param element element to insert in heap.
+   * @return a locator that can later be used for fast access to the element.
+   *
+   */
+  def insert(element: T): Locator = {
+    ensureCapacity()
+    val heapIndex = sz
+    val (inserted, locatorIndex, hashTableIndex) = hashTable.insert(element, heapIndex)
 
-  @targetName("hashTableIndexForLocator")
-  protected def hashTableIndexFor(locator: Locator): Int =
-    hashTable.locators(locator.index)
-
-  private def hashTableIndexFor(index: Int): Int =
-    hashTable.locators(heapElementsLocators(index))
+    if (inserted) {
+      // insert new element in heap
+      heapElementsLocators(heapIndex) = locatorIndex
+      println(locatorIndex)
+      heapifyUpFrom(heapIndex)
+      sz += 1
+    } else {
+      // locate already inserted element and update its priority
+      val heapIndex = hashTable.heapIndexes(hashTableIndex)
+      // require(keyFor(heapIndex) == element, s"${keyFor(heapIndex)} $element")
+      // heapElementsLocators(heapIndex) = locatorIndex
+      heapifyUpFrom(heapIndex)
+      heapifyDownFrom(heapIndex)
+    }
+    new Locator(locatorIndex)
+  }
 
   // moves element in heap at given index up as needed in order to restore heap order property
   private def heapifyUpFrom(index: Int): Unit = {
@@ -134,6 +177,20 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
     }
   }
 
+  // returns index of parent node in heap
+  private inline def parentIndexOf(inline index: Int): Int =
+    (index - 1) / 2
+
+  // checks if an element is not the root of heap
+  private inline def hasParentIndex(inline index: Int): Boolean =
+    index > IndexedHeap.rootIndex
+
+  private def keyFor(index: Int): T =
+    hashTable.keyForLocator(heapElementsLocators(index))
+
+  private def hashTableIndexFor(index: Int): Int =
+    hashTable.locatorToHashTableIndexes(heapElementsLocators(index))
+
   // moves element in heap at given index down as needed in order to restore heap order property
   private def heapifyDownFrom(index: Int): Unit = {
     var elementIndex = index
@@ -154,7 +211,7 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
       val rightChildIndex = minimumChildIndex + 1
       if (isValidIndex(rightChildIndex)) {
         val rightChild = keyFor(rightChildIndex)
-        if(priority.compare(rightChild, minimumChild) < 0) {
+        if (priority.compare(rightChild, minimumChild) < 0) {
           minimumChildIndex = rightChildIndex
           minimumChild = rightChild
         }
@@ -179,30 +236,13 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
     }
   }
 
-  /**
-   * Checks if heap stores no elements.
-   *
-   * @return `true` if heap stores no elements.
-   */
-  def isEmpty: Boolean = sz <= 0
+  // returns index of left child node in heap
+  private inline def leftChildIndexOf(inline index: Int): Int =
+    index * 2 + 1
 
-  /**
-   * Checks if heap stores at least one element.
-   *
-   * @return `true` if heap stores at least one element.
-   */
-  def nonEmpty: Boolean = sz > 0
-
-  /**
-   * Returns a locator for provided heap element. A locator can later be used for fast access to the element both in
-   * the heap and in the map. Operation is O(1) effective.
-   *
-   * @param element a heap element
-   * @return a locator for provided heap element.
-   */
-  def locatorFor(element: T): Locator =
-    hashTable.locatorFor(element)
-
+  // checks if an index corresponds to an element in heap
+  private inline def isValidIndex(inline index: Int): Boolean =
+    index < sz
 
   /**
    * Expands arrays if we run out of capacity due to too much insertions.
@@ -215,63 +255,14 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
   }
 
   /**
-   * Inserts an element in the heap using the provided locator of the element. If the element was already in the heap
-   * this operation can be used to update its priority within the heap (the element should be `equal` to previous one
-   * but its `priority` can be different). Operation is O(log n).
+   * Increases an element that is already in the heap using the provided locator of the element. Does nothing if element
+   * is not in heap or if new value does not increase stored one. Operation is O(log n).
    *
    * @param locator locator for accessing the element.
-   * @param element element to insert in heap.
+   * @param element element to increase in heap.
    */
-  def insert(locator: Locator, element: T): Unit =
-    ensureCapacity()
-    val hashTableIndex = hashTableIndexFor(locator)
-    val heapIndex = sz
-    val (inserted, locatorIndex) = hashTable.insert(hashTableIndex, element, heapIndex)
-
-    if (inserted) {
-      // insert new element in heap
-      heapElementsLocators(heapIndex) = locatorIndex
-      heapifyUpFrom(heapIndex)
-      sz += 1
-    } else {
-      // locate already inserted element and update its priority
-      val heapIndex = hashTable.heapIndexes(hashTableIndex)
-      require(keyFor(heapIndex) == element, s"${keyFor(heapIndex)} $element")
-      heapElementsLocators(heapIndex) = locatorIndex
-      heapifyUpFrom(heapIndex)
-      heapifyDownFrom(heapIndex)
-    }
-
-  /**
-   * Inserts an element in the heap returning a locator that can later be used for fast access to the element both in
-   * the heap or in the map. If the element was already in the heap this operation can be used to update its priority
-   * within the heap (the element should be `equal` to previous one but its `priority` can be different). Operation
-   * is O(log n).
-   *
-   * @param element element to insert in heap.
-   * @return a locator that can later be used for fast access to the element.
-   *
-   */
-  def insert(element: T): Locator = {
-    ensureCapacity()
-    val heapIndex = sz
-    val (inserted, locatorIndex, hashTableIndex) = hashTable.insert(element, heapIndex)
-
-    if (inserted) {
-      // insert new element in heap
-      heapElementsLocators(heapIndex) = locatorIndex
-      heapifyUpFrom(heapIndex)
-      sz += 1
-    } else {
-      // locate already inserted element and update its priority
-      val heapIndex = hashTable.heapIndexes(hashTableIndex)
-      require(keyFor(heapIndex) == element, s"${keyFor(heapIndex)} $element")
-      heapElementsLocators(heapIndex) = locatorIndex
-      heapifyUpFrom(heapIndex)
-      heapifyDownFrom(heapIndex)
-    }
-    hashTable.locatorFor(hashTableIndex)
-  }
+  def increase(locator: Locator, element: T): Boolean =
+    increaseIndex(hashTableIndexFor(locator), element)
 
   /**
    * Increases an element that is already in the heap using the provided index of the element in the hash table. Does
@@ -298,27 +289,39 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
   }
 
   /**
-   * Increases an element that is already in the heap using the provided locator of the element. Does nothing if element
-   * is not in heap or if new value does not increase stored one. Operation is O(log n).
-   *
-   * @param locator locator for accessing the element.
-   * @param element element to increase in heap.
-   */
-  def increase(locator: Locator, element: T): Boolean =
-    increaseIndex(hashTableIndexFor(locator), element)
-
-  /**
    * Increases an element that is already in the heap. Does nothing if element is not in heap or if new value does not
    * increase stored one. Operation is O(log n).
    *
    * @param element element to increase in heap.
-   * @return a locator that can later be used for fast access to the element.
+   * @return `true` if element was increased.
    *
    */
-  def increase(element: T): (Boolean, Locator) = {
+  def increase(element: T): Boolean = {
     val hashTableIndex = hashTableIndexFor(element)
-    val increased = increaseIndex(hashTableIndex, element)
-    (increased, hashTable.locatorFor(hashTableIndex))
+    increaseIndex(hashTableIndex, element)
+  }
+
+  /**
+   * Decreases an element that is already in the heap using the provided locator of the element. Does nothing if element
+   * is not in heap or if new value does not decrease stored one. Operation is O(log n).
+   *
+   * @param locator locator for accessing the element.
+   * @param element element to decrease in heap.
+   */
+  def decrease(locator: Locator, element: T): Boolean =
+    decreaseIndex(hashTableIndexFor(locator), element)
+
+  /**
+   * Decreases an element that is already in the heap. Does nothing if element is not in heap or if new value does not
+   * decrease stored one. Operation is O(log n).
+   *
+   * @param element element to decrease in heap.
+   * @return `true` if element was decreased.
+   *
+   */
+  def decrease(element: T): Boolean = {
+    val hashTableIndex = hashTableIndexFor(element)
+    decreaseIndex(hashTableIndex, element)
   }
 
   /**
@@ -346,30 +349,6 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
   }
 
   /**
-   * Decreases an element that is already in the heap using the provided locator of the element. Does nothing if element
-   * is not in heap or if new value does not decrease stored one. Operation is O(log n).
-   *
-   * @param locator locator for accessing the element.
-   * @param element element to decrease in heap.
-   */
-  def decrease(locator: Locator, element: T): Boolean =
-    decreaseIndex(hashTableIndexFor(locator), element)
-
-  /**
-   * Decreases an element that is already in the heap. Does nothing if element is not in heap or if new value does not
-   * decrease stored one. Operation is O(log n).
-   *
-   * @param element element to decrease in heap.
-   * @return a locator that can later be used for fast access to the element.
-   *
-   */
-  def decrease(element: T): (Boolean, Locator) = {
-    val hashTableIndex = hashTableIndexFor(element)
-    val decreased = decreaseIndex(hashTableIndex, element)
-    (decreased, hashTable.locatorFor(hashTableIndex))
-  }
-
-  /**
    * Returns the first element in the heap (the one with the smallest priority). Operation is O(1).
    *
    * @return the first element in the heap (the one with the smallest priority).
@@ -383,6 +362,7 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
 
   /**
    * Returns a locator for accessing first element.
+   *
    * @return a locator for accessing first element.
    */
   def locatorForFirst: Locator = {
@@ -403,7 +383,7 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
       throw new NoSuchElementException("extractFirst: heap is empty")
     }
     val first = keyFor(IndexedHeap.rootIndex)
-    hashTable.heapIndexes(heapElementsLocators(IndexedHeap.rootIndex)) = HashTableHeapIndexes.reservedMark
+    hashTable.heapIndexes(heapElementsLocators(IndexedHeap.rootIndex)) = HashTable.reservedMark
 
     sz -= 1
     if (sz > 0) {
@@ -413,9 +393,6 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
     }
     first
   }
-
-  private def containsIndex(hashTableIndex: Int): Boolean =
-    hashTable.isInHeap(hashTableIndex)
 
   /**
    * Checks whether an element is currently included in heap. Operation is O(1) effective.
@@ -428,6 +405,9 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
     containsIndex(hashTableIndex)
   }
 
+  private def hashTableIndexFor(element: T): Int =
+    hashTable.searchHashTableIndexOf(element)
+
   /**
    * Checks whether an element is currently included in heap. Operation is O(1).
    *
@@ -436,5 +416,28 @@ class IndexedHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using cl
    */
   def contains(locator: Locator): Boolean =
     containsIndex(hashTableIndexFor(locator))
+
+  @targetName("hashTableIndexForLocator")
+  protected def hashTableIndexFor(locator: Locator): Int =
+    hashTable.locatorToHashTableIndexes(locator.index)
+
+  private def containsIndex(hashTableIndex: Int): Boolean =
+    hashTable.isInHeap(hashTableIndex)
+
+  private def check(): Unit = {
+    /*
+    for (i <- 0 until sz) {
+      assert(heapElementsLocators(i) == hashTable.keys(hashTableIndexes(i)),
+        s"${heapElementsLocators(i)} ${hashTable.keys(hashTableIndexes(i))}")
+    }
+    */
+
+    for (i <- hashTable.heapIndexes.indices) {
+      if (hashTable.heapIndexes(i) >= 0) {
+        assert(heapElementsLocators(hashTable.heapIndexes(i)) == hashTable.keys(i),
+          s"${hashTable.heapIndexes(i)}  ${heapElementsLocators(hashTable.heapIndexes(i))} ${hashTable.keys(i)}")
+      }
+    }
+  }
 }
 

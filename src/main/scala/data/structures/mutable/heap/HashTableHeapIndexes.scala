@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 object HashTableHeapIndexes {
   private[heap] inline val freeMark = -1
   private[heap] inline val reservedMark = -2
-  private[heap] inline val noLocator = -2
+  private[heap] inline val noLocator = -3
 
   private[heap] inline val maximumLoadFactor = 0.5
 }

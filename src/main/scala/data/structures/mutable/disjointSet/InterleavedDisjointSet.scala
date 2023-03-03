@@ -16,7 +16,7 @@ trait InterleavedDisjointSet[A] extends DisjointSet[A] {
 
   def numberOfComponents: Int = nComponents
 
-  protected final def indexUnite(i: Int, j: Int, doUnion: Boolean): Boolean = {
+  protected final def indexUnion(i: Int, j: Int): Unit = {
     validate(i)
     validate(j)
 
@@ -26,42 +26,71 @@ trait InterleavedDisjointSet[A] extends DisjointSet[A] {
     var iRootParent = parents(iRoot)
     var jRootParent = parents(jRoot)
 
-    var canBeConnected = true
-    while (canBeConnected && (iRootParent != jRootParent)) {
-      if (iRootParent < jRootParent) {
-        if (iRoot == iRootParent) {
-          if (doUnion) {
-            parents(iRoot) = jRootParent
-            nComponents -= 1
-          }
-          canBeConnected = false
-        } else {
-          parents(iRoot) = jRootParent
-          iRoot = iRootParent
-          iRootParent = parents(iRoot)
-        }
-      } else {
+    while (true) {
+      if (iRootParent == jRootParent) {
+        return
+      }
+      else if (iRootParent < jRootParent) {
+        parents(jRoot) = iRootParent
+
         if (jRoot == jRootParent) {
-          if (doUnion) {
-            parents(jRoot) = iRootParent
-            nComponents -= 1
-          }
-          canBeConnected = false
-        } else {
-          parents(jRoot) = iRootParent
-          jRoot = jRootParent
-          jRootParent = parents(jRoot)
+          nComponents -= 1
+          return
         }
+        jRoot = jRootParent
+        jRootParent = parents(jRoot)
+
+      } else {
+        parents(iRoot) = jRootParent
+
+        if (iRoot == iRootParent) {
+          nComponents -= 1
+          return
+        }
+        iRoot = iRootParent
+        iRootParent = parents(iRoot)
       }
     }
-    canBeConnected
+  }
+
+  protected final def indexAreConnected(i: Int, j: Int): Boolean = {
+    validate(i)
+    validate(j)
+
+    var iRoot = i
+    var jRoot = j
+
+    var iRootParent = parents(iRoot)
+    var jRootParent = parents(jRoot)
+
+    while (iRootParent != jRootParent) {
+      if (iRootParent < jRootParent) {
+        if (jRoot == jRootParent) {
+          return false
+        }
+        val jRootParentParent = parents(jRootParent)
+        parents(jRoot) = jRootParentParent
+        jRoot = jRootParent
+        jRootParent = jRootParentParent
+
+      } else {
+        if (iRoot == iRootParent) {
+          return false
+        }
+        val iRootParentParent = parents(iRootParent)
+        parents(iRoot) = iRootParentParent
+        iRoot = iRootParent
+        iRootParent = iRootParentParent
+      }
+    }
+    true
   }
 
   def areConnected(x: A, y: A): Boolean =
-    indexUnite(indexOf(x), indexOf(y), false)
+    indexAreConnected(indexOf(x), indexOf(y))
 
   def union(x: A, y: A): Unit =
-    indexUnite(indexOf(x), indexOf(y), true)
+    indexUnion(indexOf(x), indexOf(y))
 }
 
 

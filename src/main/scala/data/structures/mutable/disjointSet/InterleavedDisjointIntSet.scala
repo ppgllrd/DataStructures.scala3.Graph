@@ -33,10 +33,10 @@ class InterleavedDisjointIntSet(override val size: Int)
     with IntElements {
 
   override final def areConnected(i: Int, j: Int): Boolean =
-    indexUnite(i, j, false)
+    indexAreConnected(i, j)
 
   override final def union(i: Int, j: Int): Unit =
-    indexUnite(i, j, true)
+    indexUnion(i, j)
 }
 
 

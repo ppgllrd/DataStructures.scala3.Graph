@@ -45,23 +45,23 @@ trait DisjointSet[A] {
 
 object DisjointSet {
   /**
-   * Constructs a disjoint set from an indexed set (uses an interleaved implementation).
+   * Constructs a disjoint set from an indexed set (uses an interleaved path compressed implementation).
    * @param indexedSet indexed set used to construct disjoint set.
    * @tparam A type of elements in disjoint set.
    * @return a new a disjoint set with elements taken from an indexed set.
    */
-  def fromIndexedSet[A](indexedSet: IndexedSet[A]): InterleavedDisjointSet[A] =
+  def fromIndexedSet[A](indexedSet: IndexedSet[A]): DisjointSet[A] =
     InterleavedDisjointSet.fromIndexedSet(indexedSet)
 }
 
 
 object DisjointIntSet {
   /**
-   * Constructs a disjoint set from a a set of integers (uses an interleaved implementation).
+   * Constructs a disjoint set from a a set of integers (uses an interleaved path compressed implementation).
    *
    * @param size number of integers in indexed set used to construct disjoint set.
    * @return a new a disjoint set with integer elements.
    */  
-  def apply(size: Int): InterleavedDisjointIntSet =
+  def apply(size: Int): DisjointSet[Int] =
     InterleavedDisjointIntSet(size)
 }

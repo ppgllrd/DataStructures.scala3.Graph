@@ -35,23 +35,27 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
   inline def isFree(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
     array(hashTableIndex) == HashTable.freeMark
 
-  inline def isInHeap(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
-    array(hashTableIndex) >= 0
+  inline def isFree(inline hashTableIndex: Int): Boolean =
+    isFree(heapIndexes, hashTableIndex)
+
+  // a cell is occupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
+  inline def isOccupied(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
+    !isFree(array, hashTableIndex)
+
+  inline def isOccupied(inline hashTableIndex: Int): Boolean =
+    isOccupied(heapIndexes, hashTableIndex)
+
+  // a cell is reserved if it stores an element that was extracted from heap or if it is reserved for inserting an
+  // element that has already an associated locator
+  inline def isReserved(inline hashTableIndex: Int): Boolean =
+    heapIndexes(hashTableIndex) == HashTable.reservedMark
 
   inline def isInHeap(inline hashTableIndex: Int): Boolean =
-    isInHeap(heapIndexes, hashTableIndex)
+    heapIndexes(hashTableIndex) >= 0
 
   // key with provided hashTableIndex has not yet a locator
   inline def noLocator(inline hashTableIndex: Int): Boolean =
     hashTableIndexToLocators(hashTableIndex) == HashTable.noLocator
-
-  def insert(key: T, heapIndex: Int): (Boolean, Int, Int) = {
-    rehashing()
-
-    val hashTableIndex = searchHashTableIndexOf(key)
-    val (inserted, locatorIndex) = insert(hashTableIndex, key, heapIndex)
-    (inserted, locatorIndex, hashTableIndex)
-  }
 
   // performs rehashing if current load factor exceeds maximum allowed one
   private[heap] def rehashing(): Boolean = {
@@ -64,9 +68,7 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
       heapIndexes = Array.fill[Int](heapIndexes.length * 2)(HashTable.freeMark)
       hashTableIndexToLocators = Array.fill[Int](hashTableIndexToLocators.length * 2)(HashTable.noLocator)
       for (i <- oldKeys.indices) {
-        if (oldHeapIndexes(i) != HashTable.freeMark) {
-          if (oldKeys(i) == null)
-            println(s"${oldHeapIndexes(i)}")
+        if (isOccupied(oldHeapIndexes, i)) {
           val hashTableIndex = searchHashTableIndexOf(oldKeys(i))
           keys(hashTableIndex) = oldKeys(i)
           heapIndexes(hashTableIndex) = oldHeapIndexes(i)
@@ -88,11 +90,7 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     hashTableIndex
   }
 
-  // a cell is occupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
-  inline def isOccupied(inline hashTableIndex: Int): Boolean =
-    !isFree(hashTableIndex)
-
-  // computes hash of an element
+ // computes hash of an element
   private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
 
   // computes current load factor of hash table
@@ -114,9 +112,6 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
 
     var locatorIndex = hashTableIndexToLocators(hashTableIndex)
 
-    println(locatorIndex)
-    println(isFree(hashTableIndex))
-    println(isReserved(hashTableIndex))
     if (isFree(hashTableIndex) || isReserved(hashTableIndex)) {
       keys(hashTableIndex) = key
       heapIndexes(hashTableIndex) = heapIndex
@@ -124,7 +119,6 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
       if (locatorIndex == HashTableHeapIndexes.noLocator) {
         // allocate a new Locator
         locatorIndex = locatorToHashTableIndexes.length
-        println(locatorIndex)
         locatorToHashTableIndexes.addOne(hashTableIndex)
         hashTableIndexToLocators(hashTableIndex) = locatorIndex
       }
@@ -136,13 +130,13 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     (inserted, locatorIndex)
   }
 
-  inline def isFree(inline hashTableIndex: Int): Boolean =
-    isFree(heapIndexes, hashTableIndex)
+  def insert(key: T, heapIndex: Int): (Boolean, Int, Int) = {
+    rehashing()
 
-  // a cell is reserved if it stores an element that was extracted from heap or if it is reserved for inserting an
-  // element that has already an associated locator
-  inline def isReserved(inline hashTableIndex: Int): Boolean =
-    heapIndexes(hashTableIndex) == HashTable.reservedMark
+    val hashTableIndex = searchHashTableIndexOf(key)
+    val (inserted, locatorIndex) = insert(hashTableIndex, key, heapIndex)
+    (inserted, locatorIndex, hashTableIndex)
+  }
 
   /**
    * Returns a locator for provided heap element. A locator can later be used for fast access to the element both in
@@ -176,7 +170,4 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
       new Locator(locatorIndex)
     }
   }
-
-  def keyForLocator(locatorIndex: Int): T =
-    keys(locatorToHashTableIndexes(locatorIndex))
 }

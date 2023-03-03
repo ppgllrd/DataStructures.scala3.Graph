@@ -2,6 +2,9 @@ package graph
 
 import data.structures.mutable.graph.MapWeightedGraph
 import data.structures.mutable.graph.minimumSpanningTrees.Kruskal
+import data.structures.mutable.graph.traversal.DepthFirstTraversal
+
+import scala.io.Source
 
 @main def KruskalTest1(): Unit = {
   val wg = new MapWeightedGraph[Char, Int]()
@@ -21,7 +24,7 @@ import data.structures.mutable.graph.minimumSpanningTrees.Kruskal
 
   val kruskal = new Kruskal(wg)
   println(kruskal.minimumSpanningTree.edges)
-  println(kruskal.minimumSpanningTree.edges.map(_.weight).sum)
+  println(kruskal.minimumSpanningTree.edges.toList.map(_.weight).sum)
 }
 
 
@@ -48,4 +51,30 @@ import data.structures.mutable.graph.minimumSpanningTrees.Kruskal
   val t1 = System.currentTimeMillis()
   val seconds = (t1 - t0) / 1000.0
   println(s"Graph with $order vertices and $size edges solved in $seconds seconds")
+}
+
+
+@main def kruskalTest3(): Unit = {
+  java.util.Locale.setDefault(java.util.Locale.ENGLISH)
+
+  def solve(path: String): Unit = {
+    val wg = ReadWeightedGraph(path)
+    val t0 = System.currentTimeMillis()
+    val kruskal = new Kruskal(wg)
+    val t1 = System.currentTimeMillis()
+    val seconds = (t1 - t0) / 1000.0
+    println(path)
+    println(s"Graph with ${wg.order} vertices and ${wg.size} edges solved in $seconds seconds")
+    val mst = kruskal.minimumSpanningTree
+    val weight = mst.edges.foldLeft(0.0)((ac, we) => ac + we.weight)
+
+    println(s"MST weight is $weight")
+    println(s"MST has ${mst.order} vertices and ${mst.size} edges")
+  }
+
+  solve("data/tinyEWG.txt")
+  println()
+  solve("data/mediumEWG.txt")
+  println()
+  solve("data/largeEWG.txt")
 }

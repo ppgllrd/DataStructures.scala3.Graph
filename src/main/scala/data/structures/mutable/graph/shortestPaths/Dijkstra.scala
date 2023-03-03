@@ -2,7 +2,7 @@ package data.structures.mutable.graph.shortestPaths
 
 import data.structures.mutable.graph.{GraphException, WeightedGraph}
 import data.structures.mutable.heap
-import data.structures.mutable.heap.MinHeapMap
+import data.structures.mutable.heap.IndexedMinHeapMap
 
 import scala.collection.mutable
 
@@ -35,7 +35,7 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
   private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
 
   private val priority = Ordering.by((vertexAndCost: VertexAndCost) => vertexAndCost.cost)
-  private val priorityQueue = MinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
+  private val priorityQueue = IndexedMinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
   run()
 
   private def run(): Unit =

@@ -95,7 +95,7 @@ class MapWeightedGraph[V, W] extends WeightedGraph[V, W, WeightedEdge] {
     succsAndWeights.get(vertex1) match
       case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
       case Some(incidents1) => succsAndWeights.get(vertex2) match
-        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+        case None => throw GraphException(s"addEdge: vertex $vertex2 is not in graph")
         case Some(incidents2) =>
           if (incidents2.exists(_.vertex == vertex2))
             // there must be a single edge connecting ant two vertices

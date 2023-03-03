@@ -1,6 +1,6 @@
 package graph
 
-import data.structures.mutable.heap.MinHeapMap
+import data.structures.mutable.heap.IndexedMinHeapMap
 
 object MinHeap extends App {
   case class Element(val key: Int, val priority: Int) {
@@ -18,7 +18,7 @@ object MinHeap extends App {
 
   val priority = Ordering.by[Element, Int](_.priority)
 
-  val heap = new MinHeapMap[Element, Unit](100)(using priority)
+  val heap = new IndexedMinHeapMap[Element, Unit](100)(using priority)
 
   val rnd = scala.util.Random(0)
   val xs = Array.fill(100) {

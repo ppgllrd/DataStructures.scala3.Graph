@@ -63,11 +63,11 @@ import scala.io.Source
     val kruskal = new Kruskal(wg)
     val t1 = System.currentTimeMillis()
     val seconds = (t1 - t0) / 1000.0
+    println(path)
     println(s"Graph with ${wg.order} vertices and ${wg.size} edges solved in $seconds seconds")
     val mst = kruskal.minimumSpanningTree
     val weight = mst.edges.foldLeft(0.0)((ac, we) => ac + we.weight)
 
-    println(path)
     println(s"MST weight is $weight")
     println(s"MST has ${mst.order} vertices and ${mst.size} edges")
   }

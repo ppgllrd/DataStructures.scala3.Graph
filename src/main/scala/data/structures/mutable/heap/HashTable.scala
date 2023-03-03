@@ -116,7 +116,7 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
       keys(hashTableIndex) = key
       heapIndexes(hashTableIndex) = heapIndex
 
-      if (locatorIndex == HashTableHeapIndexes.noLocator) {
+      if (locatorIndex == HashTable.noLocator) {
         // allocate a new Locator
         locatorIndex = locatorToHashTableIndexes.length
         locatorToHashTableIndexes.addOne(hashTableIndex)
@@ -157,7 +157,7 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     locatorFor(hashTableIndex)
   }
 
-  private def locatorFor(hashTableIndex: Int): Locator = {
+  def locatorFor(hashTableIndex: Int): Locator = {
     val locatorIndex = hashTableIndexToLocators(hashTableIndex)
     if (locatorIndex == HashTable.noLocator) {
       // allocate a new Locator

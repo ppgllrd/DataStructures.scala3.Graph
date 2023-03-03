@@ -5,7 +5,7 @@ import data.structures.mutable.graph.MapWeightedGraph
 import data.structures.mutable.graph.WeightedEdge
 import data.structures.mutable.disjointSet.DisjointSet
 import data.structures.mutable.disjointSet.indexedSet.ArrayIndexedSet
-import data.structures.mutable.heap.IndexedHeap
+import data.structures.mutable.heap.IndexedMinHeap
 
 import scala.reflect.ClassTag
 
@@ -35,7 +35,7 @@ class Kruskal[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord:
       val disjointSet = DisjointSet.fromIndexedSet(indexedSet)
 
       val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
-      val priorityQueue = IndexedHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
+      val priorityQueue = IndexedMinHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
       for(weightedEdge <- weightedGraph.edges)
         priorityQueue.insert(weightedEdge)
 

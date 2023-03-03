@@ -145,3 +145,27 @@ import scala.io.Source
   solve(p3, s3)
   solve(p4, s4)
 }
+
+@main def DijkstraShortestPaths4(): Unit = {
+  java.util.Locale.setDefault(java.util.Locale.ENGLISH)
+
+  def solve(path: String): Unit = {
+    val wg = ReadWeightedGraph(path)
+    val t0 = System.currentTimeMillis()
+    val source = 0
+    val dijkstra = new Dijkstra(wg, source)
+    val t1 = System.currentTimeMillis()
+    val seconds = (t1 - t0) / 1000.0
+    println(path)
+    println(s"Graph with ${wg.order} vertices and ${wg.size} edges solved in $seconds seconds")
+
+    val costs = for (vertex <- wg.vertices.toList.sorted) yield dijkstra.lowestCostTo(vertex)
+    println(costs)
+
+    for (vertex <- wg.vertices.toList.sorted)
+      println(s"$vertex ${dijkstra.shortestPathTo(vertex)}")
+  }
+
+  solve("data/tinyEWD.txt")
+  println()
+}

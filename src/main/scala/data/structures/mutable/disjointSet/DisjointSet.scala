@@ -4,6 +4,7 @@ import data.structures.mutable.disjointSet.indexedSet.IndexedSet
 
 /**
  * Trait describing a disjoint set.
+ *
  * @tparam A type of elements in disjoint set.
  * @author Pepe Gallardo          
  */
@@ -20,6 +21,7 @@ trait DisjointSet[A] {
 
   /**
    * Performs union of components corresponding to elements `x` and `y`.
+   *
    * @param x one elements in first component.
    * @param y one elements in second component.
    */
@@ -36,6 +38,7 @@ trait DisjointSet[A] {
 
   // one-to-one correspondence between elements and natural numbers
   protected def indexOf(x: A): Int
+
   protected def elementOf(i: Int): A
 
   protected final def validate(i: Int): Unit =
@@ -46,6 +49,7 @@ trait DisjointSet[A] {
 object DisjointSet {
   /**
    * Constructs a disjoint set from an indexed set (uses an interleaved path compressed implementation).
+   *
    * @param indexedSet indexed set used to construct disjoint set.
    * @tparam A type of elements in disjoint set.
    * @return a new a disjoint set with elements taken from an indexed set.
@@ -61,7 +65,7 @@ object DisjointIntSet {
    *
    * @param size number of integers in indexed set used to construct disjoint set.
    * @return a new a disjoint set with integer elements.
-   */  
+   */
   def apply(size: Int): DisjointSet[Int] =
     InterleavedDisjointIntSet(size)
 }

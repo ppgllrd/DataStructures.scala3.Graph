@@ -1,10 +1,8 @@
 package data.structures.mutable.graph.minimumSpanningTrees
 
-import data.structures.mutable.graph.WeightedGraph
-import data.structures.mutable.graph.MapWeightedGraph
-import data.structures.mutable.graph.WeightedEdge
 import data.structures.mutable.disjointSet.DisjointSet
 import data.structures.mutable.disjointSet.indexedSet.ArrayIndexedSet
+import data.structures.mutable.graph.{MapWeightedGraph, WeightedEdge, WeightedGraph}
 import data.structures.mutable.heap.IndexedMinHeap
 
 import scala.reflect.ClassTag
@@ -23,32 +21,6 @@ class Kruskal[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord:
   private val minSpanningTree = new MapWeightedGraph[V, W]()
   run()
 
-  private def run(): Unit =  {
-    val vertices = weightedGraph.vertices
-
-    if (vertices.nonEmpty)
-      // a spanning tree should have order of the graph minus 1 vertices
-      val finalNumberOfEdges = weightedGraph.order - 1
-      var currentNumberOfEdges = 0
-      
-      val indexedSet = ArrayIndexedSet(weightedGraph.vertices.toArray)
-      val disjointSet = DisjointSet.fromIndexedSet(indexedSet)
-
-      val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
-      val priorityQueue = IndexedMinHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
-      for(weightedEdge <- weightedGraph.edges)
-        priorityQueue.insert(weightedEdge)
-
-      while(priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges && disjointSet.numberOfComponents > 0)
-        val weightedEdge@WeightedEdge(vertex1, vertex2, weight) = priorityQueue.extractFirst()
-        if(!disjointSet.areConnected(vertex1, vertex2))
-          disjointSet.union(vertex1, vertex2)
-          minSpanningTree.addVertex(vertex1)
-          minSpanningTree.addVertex(vertex2)
-          minSpanningTree.addEdge(weightedEdge)
-          currentNumberOfEdges += 1
-  }
-  
   /**
    * Returns a weighted graph corresponding to minimum spanning tree.
    *
@@ -56,3 +28,29 @@ class Kruskal[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord:
    */
   def minimumSpanningTree: WeightedGraph[V, W, WeightedEdge] =
     minSpanningTree
+
+  private def run(): Unit = {
+    val vertices = weightedGraph.vertices
+
+    if (vertices.nonEmpty)
+      // a spanning tree should have order of the graph minus 1 vertices
+      val finalNumberOfEdges = weightedGraph.order - 1
+      var currentNumberOfEdges = 0
+
+      val indexedSet = ArrayIndexedSet(weightedGraph.vertices.toArray)
+      val disjointSet = DisjointSet.fromIndexedSet(indexedSet)
+
+      val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
+      val priorityQueue = IndexedMinHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
+      for (weightedEdge <- weightedGraph.edges)
+        priorityQueue.insert(weightedEdge)
+
+      while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges && disjointSet.numberOfComponents > 0)
+        val weightedEdge@WeightedEdge(vertex1, vertex2, weight) = priorityQueue.extractFirst()
+        if (!disjointSet.areConnected(vertex1, vertex2))
+          disjointSet.union(vertex1, vertex2)
+          minSpanningTree.addVertex(vertex1)
+          minSpanningTree.addVertex(vertex2)
+          minSpanningTree.addEdge(weightedEdge)
+          currentNumberOfEdges += 1
+  }

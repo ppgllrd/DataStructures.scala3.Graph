@@ -80,14 +80,14 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
   def locatorFor(element: T): Locator =
     hashTable.locatorFor(element)
 
-   private def elementFor(index: Int): T =
-    hashTable.keys(hashTableIndexFor(index))
-
   protected def hashTableIndexFor(element: T): Int =
     hashTable.searchHashTableIndexOf(element)
 
   private def hashTableIndexFor(index: Int): Int =
     hashTable.locatorToHashTableIndexes(heapElementsLocators(index))
+
+  private def elementFor(index: Int): T =
+    hashTable.keys(hashTableIndexFor(index))
 
   @targetName("hashTableIndexForLocator")
   protected def hashTableIndexFor(locator: Locator): Int =
@@ -267,7 +267,7 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
     }
     increased
   }
-
+  
   /**
    * Increases an element that is already in the heap using the provided locator of the element. Does nothing if element
    * is not in heap or if new value does not increase stored one. Operation is O(log n).
@@ -314,7 +314,7 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
     }
     decreased
   }
-
+  
   /**
    * Decreases an element that is already in the heap using the provided locator of the element. Does nothing if element
    * is not in heap or if new value does not decrease stored one. Operation is O(log n).
@@ -337,7 +337,7 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
     val hashTableIndex = hashTableIndexFor(element)
     decreaseIndex(hashTableIndex, element)
   }
-
+  
   /**
    * Returns the first element in the heap (the one with the smallest priority). Operation is O(1).
    *
@@ -383,10 +383,7 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
     }
     first
   }
-
-  private def containsIndex(hashTableIndex: Int): Boolean =
-    hashTable.isInHeap(hashTableIndex)
-
+  
   /**
    * Checks whether an element is currently included in heap. Operation is O(1) effective.
    *
@@ -406,21 +403,8 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
    */
   def contains(locator: Locator): Boolean =
     containsIndex(hashTableIndexFor(locator))
-
-  private def check(): Unit = {
-    /*
-    for (i <- 0 until sz) {
-      assert(heapElementsLocators(i) == hashTable.keys(hashTableIndexes(i)),
-        s"${heapElementsLocators(i)} ${hashTable.keys(hashTableIndexes(i))}")
-    }
-    */
-
-    for (i <- hashTable.heapIndexes.indices) {
-      if (hashTable.heapIndexes(i) >= 0) {
-        assert(heapElementsLocators(hashTable.heapIndexes(i)) == hashTable.keys(i),
-          s"${hashTable.heapIndexes(i)}  ${heapElementsLocators(hashTable.heapIndexes(i))} ${hashTable.keys(i)}")
-      }
-    }
-  }
+  
+  private def containsIndex(hashTableIndex: Int): Boolean =
+    hashTable.isInHeap(hashTableIndex)
 }
 

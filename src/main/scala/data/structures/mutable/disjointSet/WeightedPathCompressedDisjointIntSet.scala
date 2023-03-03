@@ -18,6 +18,7 @@ object WeightedPathCompressedDisjointIntSet {
  * See: Algorithms, 4th Edition by Robert Sedgewick and Kevin Wayne.
  *
  * Specialized implementation for integer elements.
+ *
  * @author Pepe Gallardo
  */
 class WeightedPathCompressedDisjointIntSet(override val size: Int)

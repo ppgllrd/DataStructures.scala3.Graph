@@ -1,9 +1,9 @@
 /** ****************************************************************************
-  * Disjoint Sets, aka Union-Find data structure
-  *
-  * Pepe Gallardo, 2019
-  *
-  * ****************************************************************************/
+ * Disjoint Sets, aka Union-Find data structure
+ *
+ * Pepe Gallardo, 2019
+ *
+ * *************************************************************************** */
 
 package data.structures.mutable.disjointSet
 

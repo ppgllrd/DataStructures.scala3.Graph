@@ -5,43 +5,17 @@ import data.structures.mutable.disjointSet.indexedSet.IndexedSet
 /**
  * Implementation of disjoint sets with weighted trees and path compression.
  * See: Algorithms, 4th Edition by Robert Sedgewick and Kevin Wayne.
+ *
  * @tparam A type of elements in disjoint set.
  * @author Pepe Gallardo
  */
 trait WeightedPathCompressedDisjointSet[A] extends DisjointSet[A] {
+  protected val parents: Array[Int] = Array.tabulate[Int](size)(i => i)
+  private val sizes = Array.fill[Int](size)(1)
   // number of different components
   protected var nComponents: Int = size
 
   def numberOfComponents: Int = nComponents
-
-  protected val parents: Array[Int] = Array.tabulate[Int](size)(i => i)
-  private val sizes = Array.fill[Int](size)(1)
-
-  protected final def findIndexRoot(i: Int): Int = {
-    validate(i)
-    var root = i
-    var stop = false
-    while (!stop) {
-      val parent = parents(root)
-      if (root == parent)
-        stop = true
-      else
-        root = parent
-    }
-
-    // path compression
-    var j = i
-    while (j != root) {
-      val jParent = parents(j)
-      parents(j) = root
-      j = jParent
-    }
-
-    root
-  }
-
-  protected def findRoot(x: A): Int =
-    findIndexRoot(indexOf(x))
 
   final def areConnected(x: A, y: A): Boolean =
     findRoot(x) == findRoot(y)
@@ -65,6 +39,32 @@ trait WeightedPathCompressedDisjointSet[A] extends DisjointSet[A] {
       }
       nComponents -= 1
     }
+  }
+
+  protected def findRoot(x: A): Int =
+    findIndexRoot(indexOf(x))
+
+  protected final def findIndexRoot(i: Int): Int = {
+    validate(i)
+    var root = i
+    var stop = false
+    while (!stop) {
+      val parent = parents(root)
+      if (root == parent)
+        stop = true
+      else
+        root = parent
+    }
+
+    // path compression
+    var j = i
+    while (j != root) {
+      val jParent = parents(j)
+      parents(j) = root
+      j = jParent
+    }
+
+    root
   }
 }
 

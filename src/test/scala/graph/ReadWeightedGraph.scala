@@ -6,7 +6,7 @@ import scala.io.Source
 
 object ReadWeightedGraph {
   def apply(path: String): MapWeightedGraph[Int, Double] = {
-    val source = Source.fromFile(path) 
+    val source = Source.fromFile(path)
     val wg = source.getLines.flatMap(_.split("\\s+")).toList match {
       case order :: size :: numbers =>
         val wg = MapWeightedGraph[Int, Double]()

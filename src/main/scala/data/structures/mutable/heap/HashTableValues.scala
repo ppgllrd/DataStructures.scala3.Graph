@@ -14,7 +14,7 @@ import scala.reflect.ClassTag
  * @author Pepe Gallardo
  */
 class HashTableValues[T, V](initialCapacity: Int)(using classTagT: ClassTag[T])(using classTagV: ClassTag[V])
-      extends HashTable[T](initialCapacity)(using classTagT) {
+  extends HashTable[T](initialCapacity)(using classTagT) {
 
   // values associated to each key in dictionary
   var values = new Array[V](initialCapacity)

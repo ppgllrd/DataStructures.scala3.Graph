@@ -1,9 +1,9 @@
 /** ****************************************************************************
-  * Disjoint Sets. Specialized implementation for Int elements
-  *
-  * Pepe Gallardo, 2019
-  *
-  * ****************************************************************************/
+ * Disjoint Sets. Specialized implementation for Int elements
+ *
+ * Pepe Gallardo, 2019
+ *
+ * *************************************************************************** */
 
 package data.structures.mutable.disjointSet
 
@@ -15,7 +15,7 @@ object InterleavedDisjointIntSet {
    * @param size number of integers in new disjoint set.
    * @return a new disjoint set of integers with specified number of elements.
    */
-  def apply(size : Int) : InterleavedDisjointIntSet =
+  def apply(size: Int): InterleavedDisjointIntSet =
     new InterleavedDisjointIntSet(size)
 }
 
@@ -23,8 +23,9 @@ object InterleavedDisjointIntSet {
 /**
  * Implementation of disjoint sets as described for Rem's implementation in:
  * Experiments on Union-Find Algorithms for the Disjoint-Set Data Structure.
- *   Md. Mostofa Ali Patwary1, Jean Blair2, and Fredrik Manne
+ * Md. Mostofa Ali Patwary1, Jean Blair2, and Fredrik Manne
  * Specialized implementation for integer elements.
+ *
  * @param size number of elements in disjoint set.
  * @author Pepe Gallardo.
  */

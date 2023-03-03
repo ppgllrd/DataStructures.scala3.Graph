@@ -20,23 +20,39 @@ import scala.collection.mutable
  * @author Pepe Gallardo
  */
 class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V)(using ord: Ordering[W], num: Numeric[W]):
-  private final case class VertexAndCost(vertex: V, cost: W):
-    def canEqual(other: Any): Boolean = other.isInstanceOf[VertexAndCost]
-
-    // note that equality only considers vertex in structure but not its cost
-    override def equals(other: Any): Boolean = other match
-      case that: VertexAndCost =>
-        (that canEqual this) && vertex == that.vertex
-      case _ => false
-
-    override def hashCode(): Int =
-      vertex.hashCode()
-
-  private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
-
   private val priority = Ordering.by((vertexAndCost: VertexAndCost) => vertexAndCost.cost)
   private val priorityQueue = IndexedMinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
+
+  /**
+   * Returns cost of shortest path from vertex `source` to vertex `destination`.
+   *
+   * @param destination destination vertex of sought path.
+   * @return cost of shortest path from vertex `source` to vertex `destination`.
+   */
+  def lowestCostTo(destination: V): W =
+    priorityQueue.map.get(withKey(destination)) match
+      case None => throw GraphException(s"optimalCostTo: vertex $destination cannot be reached from vertex $source")
+      case Some(VertexAndCost(_, cost)) => cost
+
+  private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
   run()
+
+  /**
+   * Returns shortest path from vertex `source` to vertex `destination`.
+   *
+   * @param destination destination vertex of sought path.
+   * @return shortest path from vertex `source` to vertex `destination`.
+   */
+  def shortestPathTo(destination: V): List[V] =
+    priorityQueue.map.get(withKey(destination)) match
+      case None => throw GraphException(s"optimalPathTo: vertex $destination cannot be reached from vertex $source")
+      case Some(VertexAndCost(src, _)) =>
+        var path = List(destination)
+        if (destination != source)
+          path = src :: path
+        while (path.head != source)
+          path = priorityQueue.map(withKey(path.head)).vertex :: path
+        path
 
   private def run(): Unit =
     // number of destination vertices for which we yet have to find its shortest path
@@ -83,31 +99,15 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
                 sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
               }
 
-  /**
-   * Returns cost of shortest path from vertex `source` to vertex `destination`.
-   *
-   * @param destination destination vertex of sought path.
-   * @return cost of shortest path from vertex `source` to vertex `destination`.
-   */
-  def lowestCostTo(destination: V): W =
-    priorityQueue.map.get(withKey(destination)) match
-      case None => throw GraphException(s"optimalCostTo: vertex $destination cannot be reached from vertex $source")
-      case Some(VertexAndCost(_, cost)) => cost
+  private final case class VertexAndCost(vertex: V, cost: W):
+    // note that equality only considers vertex in structure but not its cost
+    override def equals(other: Any): Boolean = other match
+      case that: VertexAndCost =>
+        (that canEqual this) && vertex == that.vertex
+      case _ => false
 
-  /**
-   * Returns shortest path from vertex `source` to vertex `destination`.
-   *
-   * @param destination destination vertex of sought path.
-   * @return shortest path from vertex `source` to vertex `destination`.
-   */
-  def shortestPathTo(destination: V): List[V] =
-    priorityQueue.map.get(withKey(destination)) match
-      case None => throw GraphException(s"optimalPathTo: vertex $destination cannot be reached from vertex $source")
-      case Some(VertexAndCost(src, _)) =>
-        var path = List(destination)
-        if (destination != source)
-          path = src :: path
-        while (path.head != source)
-          path = priorityQueue.map(withKey(path.head)).vertex :: path
-        path
+    def canEqual(other: Any): Boolean = other.isInstanceOf[VertexAndCost]
+
+    override def hashCode(): Int =
+      vertex.hashCode()
 

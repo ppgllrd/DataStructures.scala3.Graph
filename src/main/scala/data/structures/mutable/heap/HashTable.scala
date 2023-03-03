@@ -57,29 +57,8 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
   inline def noLocator(inline hashTableIndex: Int): Boolean =
     hashTableIndexToLocators(hashTableIndex) == HashTable.noLocator
 
-  // performs rehashing if current load factor exceeds maximum allowed one
-  private[heap] def rehashing(): Boolean = {
-    var rehashed = false
-    if (loadFactor > HashTable.maximumLoadFactor) {
-      val oldKeys = keys
-      val oldHeapIndexes = heapIndexes
-      val oldHashTableIndexToLocators = hashTableIndexToLocators
-      keys = new Array[T](keys.length * 2)
-      heapIndexes = Array.fill[Int](heapIndexes.length * 2)(HashTable.freeMark)
-      hashTableIndexToLocators = Array.fill[Int](hashTableIndexToLocators.length * 2)(HashTable.noLocator)
-      for (i <- oldKeys.indices) {
-        if (isOccupied(oldHeapIndexes, i)) {
-          val hashTableIndex = searchHashTableIndexOf(oldKeys(i))
-          keys(hashTableIndex) = oldKeys(i)
-          heapIndexes(hashTableIndex) = oldHeapIndexes(i)
-          locatorToHashTableIndexes(oldHashTableIndexToLocators(i)) = hashTableIndex
-          hashTableIndexToLocators(hashTableIndex) = oldHashTableIndexToLocators(i)
-        }
-      }
-      rehashed = true
-    }
-    rehashed
-  }
+  // computes hash of an element
+  private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
 
   // searches for hashTableIndex of an element in the hash table
   def searchHashTableIndexOf(key: T): Int = {
@@ -89,12 +68,6 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     }
     hashTableIndex
   }
-
- // computes hash of an element
-  private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
-
-  // computes current load factor of hash table
-  protected def loadFactor: Double = sz.toDouble / keys.length
 
   /**
    * Inserts an element and its associated hashTableIndex in heap in hash table. Operation is O(log n).
@@ -169,5 +142,32 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
       // use already existing locator
       new Locator(locatorIndex)
     }
+  }
+
+  // computes current load factor of hash table
+  protected def loadFactor: Double = sz.toDouble / keys.length
+
+  // performs rehashing if current load factor exceeds maximum allowed one
+  private[heap] def rehashing(): Boolean = {
+    var rehashed = false
+    if (loadFactor > HashTable.maximumLoadFactor) {
+      val oldKeys = keys
+      val oldHeapIndexes = heapIndexes
+      val oldHashTableIndexToLocators = hashTableIndexToLocators
+      keys = new Array[T](keys.length * 2)
+      heapIndexes = Array.fill[Int](heapIndexes.length * 2)(HashTable.freeMark)
+      hashTableIndexToLocators = Array.fill[Int](hashTableIndexToLocators.length * 2)(HashTable.noLocator)
+      for (i <- oldKeys.indices) {
+        if (isOccupied(oldHeapIndexes, i)) {
+          val hashTableIndex = searchHashTableIndexOf(oldKeys(i))
+          keys(hashTableIndex) = oldKeys(i)
+          heapIndexes(hashTableIndex) = oldHeapIndexes(i)
+          locatorToHashTableIndexes(oldHashTableIndexToLocators(i)) = hashTableIndex
+          hashTableIndexToLocators(hashTableIndex) = oldHashTableIndexToLocators(i)
+        }
+      }
+      rehashed = true
+    }
+    rehashed
   }
 }

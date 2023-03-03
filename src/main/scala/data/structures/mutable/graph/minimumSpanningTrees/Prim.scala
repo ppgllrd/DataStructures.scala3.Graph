@@ -18,6 +18,14 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
   private val minSpanningTree = new MapWeightedGraph[V, W]()
   run()
 
+  /**
+   * Returns a weighted graph corresponding to minimum spanning tree.
+   *
+   * @return a weighted graph corresponding to minimum spanning tree.
+   */
+  def minimumSpanningTree: WeightedGraph[V, W, WeightedEdge] =
+    minSpanningTree
+
   private def run(): Unit =
     val vertices = weightedGraph.vertices
 
@@ -53,14 +61,6 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
           for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
             if (!minSpanningTree.containsVertex(incident))
               priorityQueue.insert(WeightedEdge(vertex, incident, weight))
-
-  /**
-   * Returns a weighted graph corresponding to minimum spanning tree.
-   *
-   * @return a weighted graph corresponding to minimum spanning tree.
-   */
-  def minimumSpanningTree: WeightedGraph[V, W, WeightedEdge] =
-    minSpanningTree
 
 /*
 package data.structures.mutable.graph.minimumSpanningTrees

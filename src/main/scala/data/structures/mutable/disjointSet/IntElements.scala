@@ -2,6 +2,7 @@ package data.structures.mutable.disjointSet
 
 /**
  * Trait for representing integer elements.
+ *
  * @author Pepe Gallardo
  */
 protected trait IntElements {

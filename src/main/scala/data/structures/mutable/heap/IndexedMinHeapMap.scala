@@ -98,7 +98,7 @@ class IndexedMinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
         Some(hashTable.values(hashTableIndex))
       }
     }
-
+    
     def get(element: T): Option[V] =
       getIndex(hashTableIndexFor(element))
 

@@ -23,36 +23,9 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
   private val priority = Ordering.by((vertexAndCost: VertexAndCost) => vertexAndCost.cost)
   private val priorityQueue = IndexedMinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
 
-  /**
-   * Returns cost of shortest path from vertex `source` to vertex `destination`.
-   *
-   * @param destination destination vertex of sought path.
-   * @return cost of shortest path from vertex `source` to vertex `destination`.
-   */
-  def lowestCostTo(destination: V): W =
-    priorityQueue.map.get(withKey(destination)) match
-      case None => throw GraphException(s"optimalCostTo: vertex $destination cannot be reached from vertex $source")
-      case Some(VertexAndCost(_, cost)) => cost
-
   private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
-  run()
 
-  /**
-   * Returns shortest path from vertex `source` to vertex `destination`.
-   *
-   * @param destination destination vertex of sought path.
-   * @return shortest path from vertex `source` to vertex `destination`.
-   */
-  def shortestPathTo(destination: V): List[V] =
-    priorityQueue.map.get(withKey(destination)) match
-      case None => throw GraphException(s"optimalPathTo: vertex $destination cannot be reached from vertex $source")
-      case Some(VertexAndCost(src, _)) =>
-        var path = List(destination)
-        if (destination != source)
-          path = src :: path
-        while (path.head != source)
-          path = priorityQueue.map(withKey(path.head)).vertex :: path
-        path
+  run()
 
   private def run(): Unit =
     // number of destination vertices for which we yet have to find its shortest path
@@ -111,3 +84,30 @@ class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V
     override def hashCode(): Int =
       vertex.hashCode()
 
+  /**
+   * Returns cost of shortest path from vertex `source` to vertex `destination`.
+   *
+   * @param destination destination vertex of sought path.
+   * @return cost of shortest path from vertex `source` to vertex `destination`.
+   */
+  def lowestCostTo(destination: V): W =
+    priorityQueue.map.get(withKey(destination)) match
+      case None => throw GraphException(s"optimalCostTo: vertex $destination cannot be reached from vertex $source")
+      case Some(VertexAndCost(_, cost)) => cost
+
+  /**
+   * Returns shortest path from vertex `source` to vertex `destination`.
+   *
+   * @param destination destination vertex of sought path.
+   * @return shortest path from vertex `source` to vertex `destination`.
+   */
+  def shortestPathTo(destination: V): List[V] =
+    priorityQueue.map.get(withKey(destination)) match
+      case None => throw GraphException(s"optimalPathTo: vertex $destination cannot be reached from vertex $source")
+      case Some(VertexAndCost(src, _)) =>
+        var path = List(destination)
+        if (destination != source)
+          path = src :: path
+        while (path.head != source)
+          path = priorityQueue.map(withKey(path.head)).vertex :: path
+        path

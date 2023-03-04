@@ -45,7 +45,7 @@ class Kruskal[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord:
       for (weightedEdge <- weightedGraph.edges)
         priorityQueue.insert(weightedEdge)
 
-      while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges && disjointSet.numberOfComponents > 0)
+      while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges && disjointSet.numberOfComponents > 1)
         val weightedEdge@WeightedEdge(vertex1, vertex2, weight) = priorityQueue.extractFirst()
         if (!disjointSet.areConnected(vertex1, vertex2))
           disjointSet.union(vertex1, vertex2)

@@ -1,7 +1,6 @@
 package data.structures.mutable.graph.minimumSpanningTrees
 
 import data.structures.mutable.graph.{MapWeightedGraph, WeightedEdge, WeightedGraph}
-import data.structures.mutable.heap.IndexedMinHeap
 
 import scala.collection.mutable
 

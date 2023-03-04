@@ -3,7 +3,6 @@ package data.structures.mutable.graph.minimumSpanningTrees
 import data.structures.mutable.disjointSet.DisjointSet
 import data.structures.mutable.disjointSet.indexedSet.ArrayIndexedSet
 import data.structures.mutable.graph.{MapWeightedGraph, WeightedEdge, WeightedGraph}
-import data.structures.mutable.heap.IndexedMinHeap
 
 import scala.reflect.ClassTag
 
@@ -40,13 +39,12 @@ class Kruskal[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord:
       val indexedSet = ArrayIndexedSet(weightedGraph.vertices.toArray)
       val disjointSet = DisjointSet.fromIndexedSet(indexedSet)
 
-      val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
-      val priorityQueue = IndexedMinHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
-      for (weightedEdge <- weightedGraph.edges)
-        priorityQueue.insert(weightedEdge)
+      // scala.collection.mutable.PriorityQueue is a max priority queue so Ordering must be reversed
+      val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight).reverse
+      val priorityQueue = scala.collection.mutable.PriorityQueue.from(weightedGraph.edges)(priority)
 
       while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges && disjointSet.numberOfComponents > 1)
-        val weightedEdge@WeightedEdge(vertex1, vertex2, weight) = priorityQueue.extractFirst()
+        val weightedEdge@WeightedEdge(vertex1, vertex2, weight) = priorityQueue.dequeue()
         if (disjointSet.union(vertex1, vertex2))
           minSpanningTree.addVertex(vertex1)
           minSpanningTree.addVertex(vertex2)

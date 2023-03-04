@@ -34,19 +34,20 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
       val finalNumberOfEdges = weightedGraph.order - 1
       var currentNumberOfEdges = 0
 
-      val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight)
-      val priorityQueue = IndexedMinHeap[WeightedEdge[V, W]](weightedGraph.size)(using priority)
-      
+      // scala.collection.mutable.PriorityQueue is a max priority queue so Ordering must be reversed
+      val priority = Ordering.by((weightedEdge: WeightedEdge[V, W]) => weightedEdge.weight).reverse
+      val priorityQueue = new scala.collection.mutable.PriorityQueue(using priority)
+
       // take one vertex and add it to spanning tree
       val vertex = vertices.head
       minSpanningTree.addVertex(vertex)
       
       // add to priority queue edges incident to vertex
       for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
-        priorityQueue.insert(WeightedEdge(vertex, incident, weight))
+        priorityQueue.enqueue(WeightedEdge(vertex, incident, weight))
 
       while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges)
-        val weightedEdge = priorityQueue.extractFirst()
+        val weightedEdge = priorityQueue.dequeue()
         val vertex = weightedEdge.vertex2
         if (!minSpanningTree.containsVertex(vertex))
           // vertex not in spanning tree yet. This edge is the one leading to it (from a vertex in spanning tree)
@@ -59,5 +60,5 @@ class Prim[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Or
           // them in priority queue as they may improve previous known ones
           for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
             if (!minSpanningTree.containsVertex(incident))
-              priorityQueue.insert(WeightedEdge(vertex, incident, weight))
+              priorityQueue.enqueue(WeightedEdge(vertex, incident, weight))
 

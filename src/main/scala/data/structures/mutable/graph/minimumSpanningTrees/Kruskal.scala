@@ -47,8 +47,7 @@ class Kruskal[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord:
 
       while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges && disjointSet.numberOfComponents > 1)
         val weightedEdge@WeightedEdge(vertex1, vertex2, weight) = priorityQueue.extractFirst()
-        if (!disjointSet.areConnected(vertex1, vertex2))
-          disjointSet.union(vertex1, vertex2)
+        if (disjointSet.union(vertex1, vertex2))
           minSpanningTree.addVertex(vertex1)
           minSpanningTree.addVertex(vertex2)
           minSpanningTree.addEdge(weightedEdge)

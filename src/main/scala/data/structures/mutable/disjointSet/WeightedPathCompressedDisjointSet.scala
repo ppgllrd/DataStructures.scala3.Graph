@@ -20,7 +20,7 @@ trait WeightedPathCompressedDisjointSet[A] extends DisjointSet[A] {
   final def areConnected(x: A, y: A): Boolean =
     findRoot(x) == findRoot(y)
 
-  final def union(x: A, y: A): Unit = {
+  final def union(x: A, y: A): Boolean = {
     val xRoot = findRoot(x)
     val yRoot = findRoot(y)
 
@@ -38,7 +38,9 @@ trait WeightedPathCompressedDisjointSet[A] extends DisjointSet[A] {
         sizes(xRoot) += ySize
       }
       nComponents -= 1
-    }
+      true
+    } else
+      false
   }
 
   protected def findRoot(x: A): Int =

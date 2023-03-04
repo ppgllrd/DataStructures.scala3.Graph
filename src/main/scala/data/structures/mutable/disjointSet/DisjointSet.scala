@@ -24,8 +24,9 @@ trait DisjointSet[A] {
    *
    * @param x one elements in first component.
    * @param y one elements in second component.
+   * @return `true` if elements were not in same component.         
    */
-  def union(x: A, y: A): Unit
+  def union(x: A, y: A): Boolean
 
   /**
    * Checks if elements `x` and `y` are in same component.

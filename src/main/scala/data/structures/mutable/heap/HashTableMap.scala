@@ -13,7 +13,7 @@ import scala.reflect.ClassTag
  * @tparam V Type of values associated in map.
  * @author Pepe Gallardo
  */
-class HashTableValues[T, V](initialCapacity: Int)(using classTagT: ClassTag[T])(using classTagV: ClassTag[V])
+class HashTableMap[T, V](initialCapacity: Int)(using classTagT: ClassTag[T])(using classTagV: ClassTag[V])
   extends HashTable[T](initialCapacity)(using classTagT) {
 
   // values associated to each key in dictionary

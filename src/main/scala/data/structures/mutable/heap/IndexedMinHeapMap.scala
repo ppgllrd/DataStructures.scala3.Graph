@@ -59,7 +59,7 @@ class IndexedMinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
   (using classTagV: ClassTag[V]) extends IndexedMinHeap[T](initialCapacity)(using priority)(using classTagT) {
 
   // the hash table for this heap map
-  override protected val hashTable: HashTableValues[T, V] = new HashTableValues[T, V](initialCapacity * 2)
+  override protected val hashTable: HashTableMap[T, V] = new HashTableMap[T, V](initialCapacity * 2)
 
   /**
    * The map which is part of this `MinHeapMap`.

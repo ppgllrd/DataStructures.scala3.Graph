@@ -1,6 +1,5 @@
 package data.structures.mutable.disjointSet
 
-
 object WeightedPathCompressedDisjointIntSet {
   /** Constructs a disjoint set of integers with weighted trees and path compression.
    * See: Algorithms, 4th Edition by Robert Sedgewick and Kevin Wayne.
@@ -25,6 +24,6 @@ class WeightedPathCompressedDisjointIntSet(override val size: Int)
   extends WeightedPathCompressedDisjointSet[Int]
     with IntElements {
 
-  override final protected def findRoot(i: Int): Int =
+  override final protected def findRoot(i: Int): (Int, Int) =
     findIndexRoot(i)
 }

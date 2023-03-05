@@ -1,10 +1,3 @@
-/** ****************************************************************************
- * Disjoint Sets. Specialized implementation for Int elements
- *
- * Pepe Gallardo, 2019
- *
- * *************************************************************************** */
-
 package data.structures.mutable.disjointSet
 
 object InterleavedDisjointIntSet {

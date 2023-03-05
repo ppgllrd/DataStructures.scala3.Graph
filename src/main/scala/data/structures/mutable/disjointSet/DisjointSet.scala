@@ -10,30 +10,32 @@ import data.structures.mutable.disjointSet.indexedSet.IndexedSet
  */
 trait DisjointSet[A] {
   /**
-   * Total number of elements in all sets.
+   * total number of elements in all disjoint components.
    */
   val size: Int
 
   /**
-   * Number of different components in disjoint set.
+   * Returns number of disjoint components in disjoint set. 
+   *
+   * @return number of disjoint components in disjoint set.
    */
   def numberOfComponents: Int
 
   /**
-   * Performs union of components corresponding to elements `x` and `y`.
+   * Unites two disjoint components in disjoint set.
    *
-   * @param x one elements in first component.
-   * @param y one elements in second component.
-   * @return `true` if elements were not in same component.         
+   * @param x one element in first component.
+   * @param y one element in second component.
+   * @return `true` if elements were previously in different disjoint components.
    */
   def union(x: A, y: A): Boolean
 
   /**
-   * Checks if elements `x` and `y` are in same component.
+   * Checks whether two elements are in same disjoint component.
    *
-   * @param x first element.
-   * @param y second elements.
-   * @return `true` if elements `x` and `y` are in same component.         
+   * @param x one element.
+   * @param y another element.
+   * @return `true` if both elements are in same disjoint set.
    */
   def areConnected(x: A, y: A): Boolean
 
@@ -49,7 +51,7 @@ trait DisjointSet[A] {
 
 object DisjointSet {
   /**
-   * Constructs a disjoint set from an indexed set (uses an interleaved path compressed implementation).
+   * Constructs a disjoint set from an indexed set (uses an with splicing interleaved implementation).
    *
    * @param indexedSet indexed set used to construct disjoint set.
    * @tparam A type of elements in disjoint set.
@@ -62,7 +64,7 @@ object DisjointSet {
 
 object DisjointIntSet {
   /**
-   * Constructs a disjoint set from a a set of integers (uses an interleaved path compressed implementation).
+   * Constructs a disjoint set from a a set of integers (uses an with splicing interleaved implementation).
    *
    * @param size number of integers in indexed set used to construct disjoint set.
    * @return a new a disjoint set with integer elements.

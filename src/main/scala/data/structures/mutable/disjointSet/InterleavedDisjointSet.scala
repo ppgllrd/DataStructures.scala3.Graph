@@ -77,7 +77,7 @@ trait InterleavedDisjointSet[A] extends DisjointSet[A] {
     merged when the operation ends). The eﬀect of splicing is that each new parent has a higher value than the value of
     the old parent, thus compressing the tree.
     */
-    
+
     while (iRootParent != jRootParent) {
       if (iRootParent < jRootParent) {
         parents(jRoot) = iRootParent

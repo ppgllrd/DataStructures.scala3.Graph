@@ -23,6 +23,33 @@ trait RankedPathCompressedDisjointSet[A] extends DisjointSet[A] {
     xRoot == yRoot
   }
 
+  protected def findRoot(x: A): (Int, Int) =
+    findIndexRoot(indexOf(x))
+
+  protected final def findIndexRoot(i: Int): (Int, Int) = {
+    validate(i)
+    var root = i
+    var stop = false
+    while (!stop) {
+      val rootParent = parents(root)
+      if (rootParent < 0) // it's a root
+        stop = true
+      else
+        root = rootParent
+    }
+
+    // path compression
+    var node = i
+    while (node != root) {
+      val nodeParent = parents(node)
+      parents(node) = root
+      node = nodeParent
+    }
+
+    val weight = -parents(root)
+    (root, weight)
+  }
+
   final def union(x: A, y: A): Boolean = {
     val (xRoot, xRank) = findRoot(x)
     val (yRoot, yRank) = findRoot(y)
@@ -42,33 +69,6 @@ trait RankedPathCompressedDisjointSet[A] extends DisjointSet[A] {
       nComponents -= 1
       true
     }
-  }
-
-  protected def findRoot(x: A): (Int, Int) =
-    findIndexRoot(indexOf(x))
-
-  protected final def findIndexRoot(i: Int): (Int, Int) = {
-    validate(i)
-    var root = i
-    var stop = false
-    while(!stop) {
-      val rootParent = parents(root)
-      if(rootParent < 0) // it's a root
-        stop = true
-      else
-        root = rootParent
-    }
-
-    // path compression
-    var node = i
-    while (node != root) {
-      val nodeParent = parents(node)
-      parents(node) = root
-      node = nodeParent
-    }
-
-    val weight = -parents(root)
-    (root, weight)
   }
 }
 

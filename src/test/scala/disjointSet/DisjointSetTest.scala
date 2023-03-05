@@ -1,7 +1,6 @@
 package disjointSet
 
-import data.structures.mutable.disjointSet.{DisjointSet, InterleavedDisjointIntSet, InterleavedDisjointSet,
-  WeightedPathCompressedDisjointIntSet, WeightedPathCompressedDisjointSet, RankedPathCompressedDisjointIntSet, RankedPathCompressedDisjointSet}
+import data.structures.mutable.disjointSet.*
 import data.structures.mutable.disjointSet.indexedSet.ArrayIndexedSet
 
 import scala.util.Random
@@ -15,7 +14,7 @@ import scala.util.Random
     val rnd = Random(seed)
     val steps = 5000000
     val t0 = System.currentTimeMillis()
-    for(i <- 0 until steps) {
+    for (i <- 0 until steps) {
       val x = rnd.nextInt(n)
       val y = rnd.nextInt(n)
       djs.union(x, y)
@@ -31,7 +30,7 @@ import scala.util.Random
   var s1 = 0L
   var s2 = 0L
   val runs = 10
-  for(seed <- 0 until runs) {
+  for (seed <- 0 until runs) {
     val djs1 = WeightedPathCompressedDisjointSet.fromIndexedSet(elements)
     val djs2 = InterleavedDisjointSet.fromIndexedSet(elements)
 
@@ -55,7 +54,7 @@ import scala.util.Random
 
   val rnd = Random()
   val nTests = 10000
-  for(i <- 0 until nTests) {
+  for (i <- 0 until nTests) {
     val x = rnd.nextInt(n)
     val y = rnd.nextInt(n)
     assert(djs1.areConnected(x, y) == djs2.areConnected(x, y))
@@ -100,7 +99,7 @@ import scala.util.Random
   val tWPC = runtimeTest[WeightedPathCompressedDisjointIntSet](WeightedPathCompressedDisjointIntSet(_))
   val tRPC = runtimeTest[RankedPathCompressedDisjointIntSet](RankedPathCompressedDisjointIntSet(_))
 
-  println(f"Interleaved is ${100*(1-tInter/tWPC)}%.2f%% faster than weighted")
-  println(f"Interleaved is ${100*(1-tInter/tRPC)}%.2f%% faster than ranked")
-  println(f"Ranked is ${100*(1-tRPC/tWPC)}%.2f%% faster than weighted")
+  println(f"Interleaved is ${100 * (1 - tInter / tWPC)}%.2f%% faster than weighted")
+  println(f"Interleaved is ${100 * (1 - tInter / tRPC)}%.2f%% faster than ranked")
+  println(f"Ranked is ${100 * (1 - tRPC / tWPC)}%.2f%% faster than weighted")
 }

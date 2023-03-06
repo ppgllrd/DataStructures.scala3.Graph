@@ -6,6 +6,22 @@ import data.structures.mutable.graph.{MapWeightedGraph, WeightedEdge, WeightedGr
 
 import scala.reflect.ClassTag
 
+
+object Kruskal {
+  /**
+   * An object for computing minimum spanning tree for a weighted graph using Kruskal's algorithm.
+   *
+   * @param weightedGraph the weighted graph.
+   * @param ord           `Ordering` used for comparing weights of edges.
+   * @tparam V type of vertices in weiauthor Pepe Gallardoghted graph.
+   * @tparam W type of weights in weighted graph.
+   * @param classTagV a class tag for type of vertices.
+   * @return an object for computing minimum spanning tree for a weighted graph using Kruskal's algorithm.
+   */
+  def apply[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Ordering[W])(using classTagV: ClassTag[V])
+    : Kruskal[V, W] = new Kruskal(weightedGraph)(using ord)(using classTagV)
+}
+
 /**
  * Class for computing minimum spanning tree for a weighted graph using Kruskal's algorithm.
  *

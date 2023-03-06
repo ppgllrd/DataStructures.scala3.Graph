@@ -4,6 +4,20 @@ import data.structures.mutable.graph.{MapWeightedGraph, WeightedEdge, WeightedGr
 
 import scala.collection.mutable
 
+object Prim {
+  /**
+   * An object for computing minimum spanning tree for a weighted graph using Prim's algorithm.
+   *
+   * @param weightedGraph the weighted graph.
+   * @param ord           `Ordering` used for comparing weights of edges.
+   * @tparam V type of vertices in weighted graph.
+   * @tparam W type of weights in weighted graph.
+   * @return an object for computing minimum spanning tree for a weighted graph using Prim's algorithm.
+   */
+  def apply[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge])(using ord: Ordering[W]): Prim[V, W] = 
+    new Prim(weightedGraph)(using ord)
+}
+
 /**
  * Class for computing minimum spanning tree for a weighted graph using Prim's algorithm.
  *

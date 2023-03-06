@@ -26,7 +26,7 @@ import scala.io.Source
   println(wg.edges)
 
   val source = 'a'
-  val dijkstra = new Dijkstra(wg, source)
+  val dijkstra = Dijkstra(wg, source)
   for (vertex <- wg.vertices)
     println(s"Cost of shortest path from $source to $vertex is ${dijkstra.lowestCostTo(vertex)}")
 
@@ -55,7 +55,7 @@ import scala.io.Source
 
   val t0 = System.currentTimeMillis()
   val source = 'a'
-  val dijkstra = new Dijkstra(wg, source)
+  val dijkstra = Dijkstra(wg, source)
   val t1 = System.currentTimeMillis()
   for (vertex <- wg.vertices)
     println(s"Cost of shortest path from $source to $vertex is ${dijkstra.lowestCostTo(vertex)}")
@@ -133,7 +133,7 @@ import scala.io.Source
           wg.addEdge(v1, v2, w)
         }
         val source = 0
-        val dijkstra = new Dijkstra(wg, source)
+        val dijkstra = Dijkstra(wg, source)
         val costs = for (vertex <- wg.vertices.toList.sorted) yield dijkstra.lowestCostTo(vertex)
         println(costs)
         assert(costs.mkString(" ") == solution)
@@ -153,7 +153,7 @@ import scala.io.Source
     val wg = ReadWeightedGraph(path)
     val t0 = System.currentTimeMillis()
     val source = 0
-    val dijkstra = new Dijkstra(wg, source)
+    val dijkstra = Dijkstra(wg, source)
     val t1 = System.currentTimeMillis()
     val seconds = (t1 - t0) / 1000.0
     println(path)

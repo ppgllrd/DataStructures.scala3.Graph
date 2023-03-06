@@ -1,10 +1,28 @@
 package data.structures.mutable.graph.shortestPaths
 
-import data.structures.mutable.graph.{GraphException, WeightedGraph}
+import data.structures.mutable.graph.{GraphException, WeightedEdge, WeightedGraph}
 import data.structures.mutable.heap
 import data.structures.mutable.heap.IndexedMinHeapMap
 
 import scala.collection.mutable
+
+object Dijkstra {
+  /**
+   * An object for computing shortest path from one source vertex to rest of reachable vertices in a non-negatively
+   * weighted graph using Dijkstra algorithm.
+   *
+   * @param weightedGraph the weighted graph.
+   * @param source        the source vertex for constructing paths.
+   * @param ord           `Ordering` used for comparing weights of edges.
+   * @param num           `Numeric` used for adding weights of edges.
+   * @tparam V type of vertices in weighted graph.
+   * @tparam W type of weights in weighted graph.
+   * @return an object for computing shortest path from one source vertex to rest of reachable vertices in a non-negatively
+   *         weighted graph using Dijkstra algorithm.
+   */
+  def apply[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge], source: V)(using ord: Ordering[W], num: Numeric[W])
+    : Dijkstra[V, W] = new Dijkstra(weightedGraph, source)(using ord, num)
+}
 
 /**
  * Class for computing shortest path from one source vertex to rest of reachable vertices in a non-negatively weighted
@@ -16,10 +34,10 @@ import scala.collection.mutable
  * @param num           `Numeric` used for adding weights of edges.
  * @tparam V  type of vertices in weighted graph.
  * @tparam W  type of weights in weighted graph.
- * @tparam WE type of weighted edges in graph.
  * @author Pepe Gallardo
  */
-class Dijkstra[V, W, WE[_, _]](weightedGraph: WeightedGraph[V, W, WE], source: V)(using ord: Ordering[W], num: Numeric[W]):
+class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge], source: V)(using ord: Ordering[W],
+  num: Numeric[W]):
   private val priority = Ordering.by((vertexAndCost: VertexAndCost) => vertexAndCost.cost)
   private val priorityQueue = IndexedMinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
 

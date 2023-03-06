@@ -24,7 +24,7 @@ import scala.io.Source
   wg.addEdge('c', 'e', 6)
   wg.addEdge('d', 'e', 8)
 
-  val kruskal = new Kruskal(wg)
+  val kruskal = Kruskal(wg)
   println(kruskal.minimumSpanningTree.edges)
   println(kruskal.minimumSpanningTree.edges.toList.map(_.weight).sum)
 }
@@ -49,7 +49,7 @@ import scala.io.Source
   }
 
   val t0 = System.currentTimeMillis()
-  val kruskal = new Kruskal(wg)
+  val kruskal = Kruskal(wg)
   val t1 = System.currentTimeMillis()
   val seconds = (t1 - t0) / 1000.0
   println(s"Graph with $order vertices and $size edges solved in $seconds seconds")
@@ -79,7 +79,7 @@ import scala.io.Source
   def solve(path: String): Unit = {
     val wg = ReadWeightedGraph(path)
     val t0 = System.currentTimeMillis()
-    val kruskal = new Kruskal(wg)
+    val kruskal = Kruskal(wg)
     val t1 = System.currentTimeMillis()
     val seconds = (t1 - t0) / 1000.0
     println(path)

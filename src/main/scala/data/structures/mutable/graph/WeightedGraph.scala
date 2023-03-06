@@ -10,7 +10,8 @@ import scala.collection.immutable
  * @tparam WE type constructor for weighted edges in graph.
  * @author Pepe Gallardo
  */
-trait WeightedGraph[V, W, WE[_, _]] extends Graph[V, [X] =>> WE[X, W]] {
+
+trait WeightedGraph[V, W, WE[+_, +_]] extends Graph[V, [X] =>> WE[X, W]] {
   def addEdge(vertex1: V, vertex2: V, weight: W): Boolean
 
   def weightOfEdge(vertex1: V, vertex2: V): Option[W]

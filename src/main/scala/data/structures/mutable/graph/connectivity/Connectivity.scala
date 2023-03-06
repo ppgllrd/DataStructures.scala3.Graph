@@ -10,7 +10,7 @@ object Connectivity {
    * @tparam E type of edges in graph.
    * @return an object for checking whether a graph is connected or not.
    */
-  def apply[V, E[_]](graph: Graph[V, E]): Connectivity[V, E] = new Connectivity(graph)
+  def apply[V, E[+_]](graph: Graph[V, E]): Connectivity[V, E] = new Connectivity(graph)
 }
 
 /**
@@ -20,7 +20,7 @@ object Connectivity {
  * @tparam E type of edges in graph.
  * @author Pepe Gallardo.
  */
-class Connectivity[V, E[_]](graph: Graph[V, E]) {
+class Connectivity[V, E[+_]](graph: Graph[V, E]) {
   private var connected = true
   run()
 

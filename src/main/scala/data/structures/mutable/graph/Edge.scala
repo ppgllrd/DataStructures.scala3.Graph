@@ -8,7 +8,7 @@ package data.structures.mutable.graph
  * @tparam V type of vertices in edge.
  * @author Pepe Gallardo
  */
-class Edge[V](val vertex1: V, val vertex2: V) {
+class Edge[+V](val vertex1: V, val vertex2: V) {
   override def equals(other: Any): Boolean = other match {
     case that: Edge[?] =>
       (that canEqual this) &&

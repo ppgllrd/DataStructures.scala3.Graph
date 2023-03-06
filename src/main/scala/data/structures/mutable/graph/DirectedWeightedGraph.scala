@@ -10,7 +10,7 @@ import scala.collection.immutable
  * @tparam WE type constructor for directed weighted edges in graph.
  * @author Pepe Gallardo
  */
-trait DirectedWeightedGraph[V, W, WE[_, _]] extends DirectedGraph[V, [X] =>> WE[X, W]]
+trait DirectedWeightedGraph[V, W, WE[+_, +_]] extends DirectedGraph[V, [X] =>> WE[X, W]]
   with WeightedGraph[V, W, WE] {
   /**
    * Returns a set with all vertices that are direct predecessors of `destination` and weights of corresponding directed

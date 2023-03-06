@@ -13,7 +13,7 @@ object CycleDetector {
    * @tparam E type of edges in graph.
    * @return an object for checking whether a graph is acyclic or not.
    */
-  def apply[V, E[_]](graph: Graph[V, E]): CycleDetector[V, E] = new CycleDetector(graph)
+  def apply[V, E[+_]](graph: Graph[V, E]): CycleDetector[V, E] = new CycleDetector(graph)
 }
 
 /**
@@ -24,7 +24,7 @@ object CycleDetector {
  * @tparam E type of edges in graph.
  * @author Pepe Gallardo.
  */
-class CycleDetector[V, E[_]](graph: Graph[V, E]) {
+class CycleDetector[V, E[+_]](graph: Graph[V, E]) {
   private val visited = mutable.Set[V]()
   private var acyclic = true
   run()

@@ -9,7 +9,7 @@ import scala.collection.immutable
  * @tparam E type constructor for edges in graph.
  * @author Pepe Gallardo
  */
-trait Graph[V, E[_]] extends traversal.Traversable[V] {
+trait Graph[V, E[+_]] extends traversal.Traversable[V] {
   /**
    * Adds a vertex to a graph.
    *
@@ -81,7 +81,7 @@ trait Graph[V, E[_]] extends traversal.Traversable[V] {
    */
   def addEdge(edge: E[V]): Boolean
 
-  /**
+  /**Weighted
    * Deletes an edge from graph.
    *
    * @param vertex1 one endpoint of edge to delete.

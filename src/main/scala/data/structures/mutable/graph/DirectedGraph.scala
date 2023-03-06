@@ -9,7 +9,7 @@ import scala.collection.immutable
  * @tparam E type constructor for directed edges in graph.
  * @author Pepe Gallardo
  */
-trait DirectedGraph[V, E[_]] extends Graph[V, E] {
+trait DirectedGraph[V, E[+_]] extends Graph[V, E] {
   /**
    * Returns a set with all vertices that are direct predecessors of vertex `destination`.
    *

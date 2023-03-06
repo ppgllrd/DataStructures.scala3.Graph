@@ -1,4 +1,4 @@
-package data.structures.mutable.graph.minimumSpanningTrees
+package data.structures.mutable.graph.minimumSpanningTree
 
 import data.structures.mutable.disjointSet.DisjointSet
 import data.structures.mutable.disjointSet.indexedSet.ArrayIndexedSet

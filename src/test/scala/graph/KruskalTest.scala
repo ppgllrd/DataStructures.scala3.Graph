@@ -1,7 +1,9 @@
 package graph
 
 import data.structures.mutable.graph.MapWeightedGraph
-import data.structures.mutable.graph.minimumSpanningTrees.Kruskal
+import data.structures.mutable.graph.connectivity.Connectivity
+import data.structures.mutable.graph.cycle.CycleDetector
+import data.structures.mutable.graph.minimumSpanningTree.Kruskal
 import data.structures.mutable.graph.traversal.DepthFirstTraversal
 
 import scala.io.Source
@@ -51,6 +53,23 @@ import scala.io.Source
   val t1 = System.currentTimeMillis()
   val seconds = (t1 - t0) / 1000.0
   println(s"Graph with $order vertices and $size edges solved in $seconds seconds")
+
+  val mst = kruskal.minimumSpanningTree
+
+  // two alternative tests to check that a graph is a tree
+  val isTree1 =
+    mst.size == mst.order - 1 && CycleDetector(mst).isAcyclic
+
+  val isTree2 =
+    mst.size == mst.order - 1 && Connectivity(mst).isConnected
+
+  // two alternative tests to check that a mst is a spanning tree for wg
+  val isMst1 = isTree1 && mst.order == wg.order
+  val isMst2 = isTree2 && mst.order == wg.order
+
+  assert(isMst1)
+  assert(isMst2)
+
 }
 
 

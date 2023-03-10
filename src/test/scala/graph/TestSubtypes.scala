@@ -277,27 +277,38 @@ object Version4 extends App {
     def deleteVertex(vertex: V): Boolean
     def containsVertex(vertex: V): Boolean
 
-    def vertices: Set[V]
+    def vertices: immutable.Set[V]
     def order: Int
 
-    def edges[Edge[X] >: E[X]]: Set[Edge[V]]
+    def edges[Edge[X] >: E[X]]: immutable.Set[Edge[V]]
     def size: Int
 
     def deleteEdge(vertex1: V, vertex2: V): Boolean
     def containsEdge(vertex1: V, vertex2: V): Boolean
 
-    def successors(v: V): immutable.Set[V]
-    def edgesFrom[Edge[X] >: E[X]](vertex: V): immutable.Set[Edge[V]]
+    def successors(vertex: V): immutable.Set[V]
+    def predecessors(vertex: V): immutable.Set[V]
+
+    // edges where vertex is first vertex
+    def incidentsFrom[Edge[X] >: E[X]](vertex: V): immutable.Set[Edge[V]]
+    // edges where vertex is second destination
+    def incidentsTo[Edge[X] >: E[X]](vertex: V): immutable.Set[Edge[V]]
+  }
+
+  trait UndirectedGraph[V] extends Graph[V, Edge] {
+    def adjacents(vertex: V): immutable.Set[V]
+    override def successors(vertex: V): immutable.Set[V] = adjacents(vertex)
+    override def predecessors(vertex: V): immutable.Set[V] = adjacents(vertex)
+
+    def incidents[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] =
+      incidentsFrom(vertex)
+
     def degree(vertex: V): Int
   }
 
-  trait UndirectedGraph[V] extends Graph[V, Edge]
-
   trait DirectedGraph[V] extends Graph[V, DirectedEdge] {
-    def predecessors(v: V): immutable.Set[V]
-    def edgesTo[Edge[X] >: DirectedEdge[X]](v: V): immutable.Set[Edge[V]]
-    def indegree(vertex: V): Int
-    def outdegree(vertex: V): Int
+    def indegree(destination: V): Int
+    def outdegree(source: V): Int
   }
 
   // trait WeightedGraph[V, W, +E[X, Y] <: IsEdge[X] with IsWeighted[Y]] extends Graph[V, [X] =>> E[X, W]]
@@ -307,7 +318,6 @@ object Version4 extends App {
     def deleteEdge(vertex1: V, vertex2: V, weight: W): Boolean
     def containsEdge(vertex1: V, vertex2: V, weight: W): Boolean
     def weightOfEdge(vertex1: V, vertex2: V): Option[W]
-    def successorsAndWeights(vertex: V): immutable.Set[(V, W)]
   }
 
   trait UnweightedGraph[V] extends Graph[V, IsEdge] {
@@ -344,35 +354,47 @@ object Version4 extends App {
   class MapGraph[V] extends UndirectedUnweightedGraph[V] {
     private var xs =  List[Edge[V]]()
 
-    override def addEdge(edge: Edge[V]): Unit = ???
-
-    override def containsEdge(edge: Edge[V]): Boolean = ???
-
-    override def deleteEdge(edge: Edge[V]): Unit = ???
-
-    override def addEdge(vertex1: V, vertex2: V): Boolean = ???
-
-    override def deleteEdge(vertex1: V, vertex2: V): Boolean = ???
-
     override def addVertex(vertex: V): Boolean = ???
-
-    override def deleteVertex(vertex: V): Boolean = ???
 
     override def containsVertex(vertex: V): Boolean = ???
 
-    override def vertices: Set[V] = ???
+    override def deleteVertex(vertex: V): Boolean = ???
+
+    override def vertices: immutable.Set[V] = ???
 
     override def order: Int = ???
 
-    override def edges[E[X] >: Edge[X]]: Set[E[V]] = ???
 
-    override def size: Int = ???
+    override def addEdge(vertex1: V, vertex2: V): Boolean = ???
+
+    override def addEdge(edge: Edge[V]): Unit = ???
 
     override def containsEdge(vertex1: V, vertex2: V): Boolean = ???
 
-    override def successors(v: V): immutable.Set[V] = ???
+    override def containsEdge(edge: Edge[V]): Boolean = ???
 
-    override def edgesFrom[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
+    override def deleteEdge(vertex1: V, vertex2: V): Boolean = ???
+
+    override def deleteEdge(edge: Edge[V]): Unit = ???
+
+    override def edges[E[X] >: Edge[X]]: immutable.Set[E[V]] = {
+      val v = vertices.head
+      immutable.Set(new Edge(v, v))
+    }
+
+    override def size: Int = ???
+
+
+    override def adjacents(vertex: V): immutable.Set[V] = ???
+
+    override def incidents[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
+
+    override def incidentsFrom[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = {
+      val v = vertices.head
+      immutable.Set(new Edge(v, v))
+    }
+
+    override def incidentsTo[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
 
     override def degree(vertex: V): Int = ???
   }
@@ -380,137 +402,147 @@ object Version4 extends App {
   class MapWeightedGraph[V, W] extends UndirectedWeightedGraph[V, W] {
     private var xs =  List[WeightedEdge[V, W]]()
 
-    override def addEdge(weightedEdge: WeightedEdge[V, W]): Unit = ???
+    override def addVertex(vertex: V): Boolean = ???
 
-    override def containsEdge(weightedEdge: WeightedEdge[V, W]): Boolean = ???
+    override def containsVertex(vertex: V): Boolean = ???
 
-    override def deleteEdge(weightedEdge: WeightedEdge[V, W]): Unit = ???
+    override def deleteVertex(vertex: V): Boolean = ???
+
+    override def vertices: immutable.Set[V] = ???
+
+    override def order: Int = ???
+
 
     override def addEdge(vertex1: V, vertex2: V, weight: W): Boolean = ???
 
-    override def deleteEdge(vertex1: V, vertex2: V, weight: W): Boolean = ???
-
-    override def containsEdge(vertex1: V, vertex2: V, weight: W): Boolean = ???
-
-    override def weightOfEdge(vertex1: V, vertex2: V): Option[W] = ???
-
-    override def successorsAndWeights(vertex: V): immutable.Set[(V, W)] = ???
-
-    override def addVertex(vertex: V): Boolean = ???
-
-    override def deleteVertex(vertex: V): Boolean = ???
-
-    override def containsVertex(vertex: V): Boolean = ???
-
-    override def vertices: Set[V] = ???
-
-    override def order: Int = ???
-
-    override def edges[Edge[X] >: WeightedEdge[X, W]]: Set[Edge[V]] = ???
-
-    override def size: Int = ???
-
-    override def deleteEdge(vertex1: V, vertex2: V): Boolean = ???
+    override def addEdge(weightedEdge: WeightedEdge[V, W]): Unit = ???
 
     override def containsEdge(vertex1: V, vertex2: V): Boolean = ???
 
-    override def successors(v: V): immutable.Set[V] = ???
+    override def containsEdge(vertex1: V, vertex2: V, weight: W): Boolean = ???
 
-    override def edgesFrom[Edge[X] >: WeightedEdge[X, W]](vertex: V): immutable.Set[Edge[V]] = ???
+    override def containsEdge(weightedEdge: WeightedEdge[V, W]): Boolean = ???
+
+    override def deleteEdge(vertex1: V, vertex2: V): Boolean = ???
+
+    override def deleteEdge(vertex1: V, vertex2: V, weight: W): Boolean = ???
+
+    override def deleteEdge(weightedEdge: WeightedEdge[V, W]): Unit = ???
+
+    override def edges[Edge[X] >: WeightedEdge[X, W]]: immutable.Set[Edge[V]] = {
+      val v = vertices.head
+      val Some(w) = weightOfEdge(v, v)
+      immutable.Set(new WeightedEdge(v, v, w))
+    }
+
+    override def size: Int = ???
+
+    override def weightOfEdge(vertex1: V, vertex2: V): Option[W] = ???
+
+
+    override def adjacents(vertex: V): immutable.Set[V] = ???
+
+    override def incidents[Edge[X] >: WeightedEdge[X, W]](vertex: V): immutable.Set[Edge[V]] = ???
 
     override def degree(vertex: V): Int = ???
+
+    override def incidentsFrom[Edge[X] >: WeightedEdge[X, W]](vertex: V): immutable.Set[Edge[V]] = ???
+
+    override def incidentsTo[Edge[X] >: WeightedEdge[X, W]](vertex: V): immutable.Set[Edge[V]] = ???
   }
 
   class MapDirectedGraph[V] extends DirectedUnweightedGraph[V] {
-    override def addEdge(directedEdge: DirectedEdge[V]): Unit = ???
+    override def addVertex(vertex: V): Boolean = ???
 
-    override def containsEdge(directedEdge: DirectedEdge[V]): Boolean = ???
+    override def containsVertex(vertex: V): Boolean = ???
 
-    override def deleteEdge(directedEdge: DirectedEdge[V]): Unit = ???
+    override def deleteVertex(vertex: V): Boolean = ???
+
+    override def vertices: immutable.Set[V] = ???
+
+    override def order: Int = ???
+
 
     override def addEdge(source: V, destination: V): Boolean = ???
 
-    override def deleteEdge(source: V, destination: V): Boolean = ???
-
-    override def predecessors(v: V): immutable.Set[V] = ???
-
-    override def edgesTo[Edge[X] >: DirectedEdge[X]](v: V): immutable.Set[Edge[V]] = ???
-
-    override def indegree(vertex: V): Int = ???
-
-    override def outdegree(vertex: V): Int = ???
-
-    override def addVertex(vertex: V): Boolean = ???
-
-    override def deleteVertex(vertex: V): Boolean = ???
-
-    override def containsVertex(vertex: V): Boolean = ???
-
-    override def vertices: Set[V] = ???
-
-    override def order: Int = ???
-
-    override def edges[Edge[X] >: DirectedEdge[X]]: Set[Edge[V]] = ???
-
-    override def size: Int = ???
+    override def addEdge(directedEdge: DirectedEdge[V]): Unit = ???
 
     override def containsEdge(source: V, destination: V): Boolean = ???
 
-    override def successors(v: V): immutable.Set[V] = ???
+    override def containsEdge(directedEdge: DirectedEdge[V]): Boolean = ???
 
-    override def edgesFrom[Edge[X] >: DirectedEdge[X]](vertex: V): immutable.Set[Edge[V]] = ???
+    override def deleteEdge(source: V, destination: V): Boolean = ???
 
-    override def degree(vertex: V): Int = ???
+    override def deleteEdge(directedEdge: DirectedEdge[V]): Unit = ???
+
+    override def edges[Edge[X] >: DirectedEdge[X]]: immutable.Set[Edge[V]] = ???
+
+    override def size: Int = ???
+
+
+    override def successors(source: V): immutable.Set[V] = ???
+
+    override def predecessors(destination: V): immutable.Set[V] = ???
+
+    override def incidentsFrom[Edge[X] >: DirectedEdge[X]](source: V): immutable.Set[Edge[V]] = ???
+
+    override def incidentsTo[Edge[X] >: DirectedEdge[X]](destination: V): immutable.Set[Edge[V]] = ???
+
+    override def outdegree(source: V): Int = ???
+
+    override def indegree(destination: V): Int = ???
   }
 
   class MapDirectedWeightedGraph[V, W] extends DirectedWeightedGraph[V, W] {
-    override def addEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Unit = ???
-
-    override def containsEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Boolean = ???
-
-    override def deleteEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Unit = ???
-
-    override def addEdge(source: V, destination: V, weight: W): Boolean = ???
-
-    override def deleteEdge(source: V, destination: V, weight: W): Boolean = ???
-
-    override def containsEdge(source: V, destination: V, weight: W): Boolean = ???
-
-    override def weightOfEdge(source: V, destination: V): Option[W] = ???
-
-    override def successorsAndWeights(vertex: V): immutable.Set[(V, W)] = ???
-
-    override def predecessors(v: V): immutable.Set[V] = ???
-
-    override def edgesTo[Edge[X] >: DirectedWeightedEdge[X, W]](v: V): immutable.Set[Edge[V]] = ???
-
-    override def indegree(vertex: V): Int = ???
-
-    override def outdegree(vertex: V): Int = ???
-
     override def addVertex(vertex: V): Boolean = ???
-
-    override def deleteVertex(vertex: V): Boolean = ???
 
     override def containsVertex(vertex: V): Boolean = ???
 
-    override def vertices: Set[V] = ???
+    override def deleteVertex(vertex: V): Boolean = ???
+
+    override def vertices: immutable.Set[V] = ???
 
     override def order: Int = ???
 
-    override def edges[Edge[X] >: DirectedWeightedEdge[X, W]]: Set[Edge[V]] = ???
 
-    override def size: Int = ???
+    override def addEdge(source: V, destination: V, weight: W): Boolean = ???
 
-    override def deleteEdge(source: V, destination: V): Boolean = ???
+    override def addEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Unit = ???
 
     override def containsEdge(source: V, destination: V): Boolean = ???
 
-    override def successors(v: V): immutable.Set[V] = ???
+    override def containsEdge(source: V, destination: V, weight: W): Boolean = ???
 
-    override def edgesFrom[Edge[X] >: DirectedWeightedEdge[X, W]](vertex: V): immutable.Set[Edge[V]] = ???
+    override def containsEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Boolean = ???
 
-    override def degree(vertex: V): Int = ???
+    override def deleteEdge(source: V, destination: V): Boolean = ???
+
+    override def deleteEdge(source: V, destination: V, weight: W): Boolean = ???
+
+    override def deleteEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Unit = ???
+
+    override def edges[Edge[X] >: DirectedWeightedEdge[X, W]]: immutable.Set[Edge[V]] = {
+      val v = vertices.head
+      val Some(w) = weightOfEdge(v, v)
+      immutable.Set(new DirectedWeightedEdge(v, v, w))
+    }
+
+    override def size: Int = ???
+
+    override def weightOfEdge(source: V, destination: V): Option[W] = ???
+
+
+    override def successors(source: V): immutable.Set[V] = ???
+
+    override def predecessors(destination: V): immutable.Set[V] = ???
+
+    override def incidentsFrom[Edge[X] >: DirectedWeightedEdge[X, W]](source: V): immutable.Set[Edge[V]] = ???
+
+    override def incidentsTo[Edge[X] >: DirectedWeightedEdge[X, W]](destination: V): immutable.Set[Edge[V]] = ???
+
+    override def outdegree(source: V): Int = ???
+
+    override def indegree(destination: V): Int = ???
   }
 
   val e = new Edge[Int](1, 2)
@@ -529,62 +561,99 @@ object Version4 extends App {
 
   val g2 : UndirectedGraph[Int] = wg
 
-  println(wg.edges)
-  println(g2.edges)
-
-
-  def f1[V](g: UndirectedGraph[V]): Unit = {
-    val e: Edge[V] = g.edges.head
-    println(e.vertex1)
-  }
-
-
-  f1(g)
-  f1(wg)
-
-  /*
-  def f2[V, W](g: WeightedGraph[V, W, IsWeightedEdge]): Unit = {
-    println(g.edges.head.weight)
-    println(g.edges.head.vertex1)
-
-  }
-  */
-
-  def f2[V, W](g: WeightedGraph[V, W]): Unit = {
-    val e = g.edges.head
-    println(g.edges.head.weight)
-    println(g.edges.head.vertex1)
-  }
+  val dg = new MapDirectedGraph[Int]
+  dg.addEdge(new DirectedEdge(1, 2))
+  dg.addEdge(1, 6)
 
   val dwg = new MapDirectedWeightedGraph[Int, Double]
   dwg.addEdge(new DirectedWeightedEdge(1, 2, 5.6))
   dwg.addEdge(3, 4, 7.7)
 
+  println(wg.edges)
+  println(g2.edges)
 
-  f2(dwg)
+
+  // more general. Any type of graph
+  def f1[V](g: Graph[V, IsEdge]): Unit = {
+    val e: IsEdge[V] = g.edges.head
+    println(e.vertex1)
+
+    val v = g.vertices.head
+    val es: immutable.Set[IsEdge[V]] = g.incidentsFrom(v)
+    println(es.head.vertex1)
+  }
+
+  f1(g)
+  f1(wg)
+  f1(dg)
+  f1(dwg)
+
+
+  // only undirected graphs
+  def f2[V](g: UndirectedGraph[V]): Unit = {
+    val e: IsEdge[V] = g.edges.head
+    println(e.vertex1)
+
+    val v = g.vertices.head
+    val es: immutable.Set[IsEdge[V]] = g.incidentsFrom(v)
+    println(es.head.vertex1)
+  }
+
+  f2(g)
   f2(wg)
+  // error f2(dg)
+  // error f2(dwg)
 
 
-  def f3[V, W](g: DirectedGraph[V]): Unit = {
-    println(g.edges.head.vertex1)
-    println(g.edges.head.source)
+  // only weighted graphs
+  def f3[V, W](g: WeightedGraph[V, W]): Unit = {
+    val e: IsWeightedEdge[V, W] = g.edges.head
+    println(e.weight)
+    println(e.vertex1)
+
+    val v = g.vertices.head
+    val es: immutable.Set[IsWeightedEdge[V, W]] = g.incidentsFrom(v)
+    println(es.head.weight)
   }
 
-  val dg = new MapDirectedGraph[Int]
-  dg.addEdge(new DirectedEdge(1, 2))
-  dg.addEdge(1, 6)
-
-
-  f3(dg)
   f3(dwg)
+  f3(wg)
+  // error f3(g)
+  // error f3(dg)
 
 
+  // only directed graphs
+  def f4[V](g: DirectedGraph[V]): Unit = {
+    val e: IsDirectedEdge[V] = g.edges.head
+    println(e.source)
 
-  def f4[V, W](g: DirectedWeightedGraph[V, W]): Unit = {
-    println(g.edges.head.weight)
-    println(g.edges.head.vertex1)
-    println(g.edges.head.source)
+    val v = g.vertices.head
+    val es: immutable.Set[IsDirectedEdge[V]] = g.incidentsFrom(v)
+    println(es.head.source)
   }
 
+  f4(dg)
   f4(dwg)
+
+
+  // only directed weighted graphs
+  def f5[V, W](g: DirectedWeightedGraph[V, W]): Unit = {
+    val e: IsDirectedWeightedEdge[V, W] = g.edges.head
+    println(e.weight)
+    println(e.source)
+
+    val v = g.vertices.head
+    // Set is not covariant !!!
+    // val es: immutable.Set[IsDirectedWeightedEdge[V, W]] = g.incidentsFrom(v)
+    val es: Iterable[IsDirectedWeightedEdge[V, W]] = g.incidentsFrom(v)
+    val es2: Set[DirectedWeightedEdge[V, W]] = g.incidentsFrom(v)
+    val e2: IsDirectedWeightedEdge[V, W] = g.incidentsFrom(v).head
+    println(es.head.weight)
+    println(es.head.source)
+  }
+
+  f5(dwg)
+  // error f5(g)
+  // error f5(wg)
+  // error f5(dg)
 }

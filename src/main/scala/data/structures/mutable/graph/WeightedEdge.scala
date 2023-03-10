@@ -11,7 +11,7 @@ package data.structures.mutable.graph
  * @author Pepe Gallardo
  */
 class WeightedEdge[+V, +W](override val vertex1: V, override val vertex2: V, val weight: W)
-  extends Edge[V](vertex1, vertex2) {
+  extends Edge[V](vertex1, vertex2) with IsWeightedEdge[V, W] {
   override def equals(other: Any): Boolean = other match {
     case that: WeightedEdge[?, ?] =>
       (that canEqual this) &&

@@ -32,6 +32,7 @@ object IndexedMinHeapTest extends App {
     override def hashCode(): Int =
       key.hashCode()
   }
+
   while (heap.nonEmpty) {
     val x = heap.extractFirst()
     println(x.toString + " " + (x.priority >= prev))

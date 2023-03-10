@@ -76,17 +76,20 @@ class IndexedMinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
       hashTable.values(hashTableIndex) = value
     }
 
+    def apply(element: T): V =
+      applyIndex(hashTableIndexFor(element))
+
     private def applyIndex(hashTableIndex: Int): V = {
       assert(!hashTable.isFree(hashTableIndex), "apply: element is not in map")
       hashTable.values(hashTableIndex)
     }
 
-    def apply(element: T): V =
-      applyIndex(hashTableIndexFor(element))
-
     def apply(locator: Locator): V = {
       applyIndex(hashTableIndexFor(locator))
     }
+
+    def get(element: T): Option[V] =
+      getIndex(hashTableIndexFor(element))
 
     private def getIndex(hashTableIndex: Int): Option[V] = {
       if (hashTable.isFree(hashTableIndex)) {
@@ -98,9 +101,6 @@ class IndexedMinHeapMap[T, V](initialCapacity: Int)(using priority: Ordering[T])
         Some(hashTable.values(hashTableIndex))
       }
     }
-    
-    def get(element: T): Option[V] =
-      getIndex(hashTableIndexFor(element))
 
     def get(locator: Locator): Option[V] =
       getIndex(hashTableIndexFor(locator))

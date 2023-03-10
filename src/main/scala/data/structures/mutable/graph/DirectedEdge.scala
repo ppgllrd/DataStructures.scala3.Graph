@@ -8,7 +8,11 @@ package data.structures.mutable.graph
  * @tparam V type of vertices in unweighted directed edge.
  * @author Pepe Gallardo
  */
-class DirectedEdge[+V](val source: V, val destination: V) extends Edge[V](source, destination) {
+class DirectedEdge[+V](val source: V, val destination: V) extends IsEdge[V] with IsDirectedEdge[V] {
+  override def vertex1: V = source
+
+  override def vertex2: V = destination
+
   override def equals(other: Any): Boolean = other match {
     case that: DirectedEdge[?] =>
       (that canEqual this) && (source == that.source) && (destination == that.destination)

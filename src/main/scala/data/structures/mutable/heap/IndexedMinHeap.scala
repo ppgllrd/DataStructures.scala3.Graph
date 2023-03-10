@@ -80,137 +80,6 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
   def locatorFor(element: T): Locator =
     hashTable.locatorFor(element)
 
-  protected def hashTableIndexFor(element: T): Int =
-    hashTable.searchHashTableIndexOf(element)
-
-  private def hashTableIndexFor(index: Int): Int =
-    hashTable.locatorToHashTableIndexes(heapElementsLocators(index))
-
-  private def elementFor(index: Int): T =
-    hashTable.keys(hashTableIndexFor(index))
-
-  @targetName("hashTableIndexForLocator")
-  protected def hashTableIndexFor(locator: Locator): Int =
-    hashTable.locatorToHashTableIndexes(locator.index)
-
-  // returns index of parent node in heap
-  private inline def parentIndexOf(inline index: Int): Int =
-    (index - 1) / 2
-
-  // checks if an element is not the root of heap
-  private inline def hasParentIndex(inline index: Int): Boolean =
-    index > IndexedMinHeap.rootIndex
-
-  // returns index of left child node in heap
-  private inline def leftChildIndexOf(inline index: Int): Int =
-    index * 2 + 1
-
-  // checks if an index corresponds to an element in heap
-  private inline def isValidIndex(inline index: Int): Boolean =
-    index < sz
-
-  // moves element in heap at given index up as needed in order to restore heap order property
-  private def heapifyUpFrom(index: Int): Unit = {
-    var elementIndex = index
-    val element = elementFor(elementIndex)
-    val elementLocator = heapElementsLocators(elementIndex)
-    val elementHashTableIndex = hashTableIndexFor(elementIndex)
-
-    var sorted = false
-    var moved = false
-    while (!sorted && hasParentIndex(elementIndex)) {
-      val parentIndex = parentIndexOf(elementIndex)
-      val parent = elementFor(parentIndex)
-      if (priority.compare(element, parent) >= 0) {
-        sorted = true
-      } else {
-        // move parent down
-        val parentHashTableIndex = hashTableIndexFor(parentIndex)
-        heapElementsLocators(elementIndex) = heapElementsLocators(parentIndex)
-        hashTable.heapIndexes(parentHashTableIndex) = elementIndex
-
-        moved = true
-        elementIndex = parentIndex
-      }
-    }
-    if (moved) {
-      // place initial element in its right position
-      heapElementsLocators(elementIndex) = elementLocator
-      hashTable.heapIndexes(elementHashTableIndex) = elementIndex
-    }
-  }
-
-  // moves element in heap at given index down as needed in order to restore heap order property
-  private def heapifyDownFrom(index: Int): Unit = {
-    var elementIndex = index
-    val element = elementFor(elementIndex)
-    val elementLocator = heapElementsLocators(elementIndex)
-    val elementHashTableIndex = hashTableIndexFor(elementIndex)
-
-    var sorted = false
-    var moved = false
-    var minimumChildIndex = 0
-
-    while ( {
-      minimumChildIndex = leftChildIndexOf(elementIndex)
-      !sorted && isValidIndex(minimumChildIndex)
-    }) {
-      var minimumChild = elementFor(minimumChildIndex)
-      // find minimum child
-      val rightChildIndex = minimumChildIndex + 1
-      if (isValidIndex(rightChildIndex)) {
-        val rightChild = elementFor(rightChildIndex)
-        if (priority.compare(rightChild, minimumChild) < 0) {
-          minimumChildIndex = rightChildIndex
-          minimumChild = rightChild
-        }
-      }
-      if (priority.compare(minimumChild, element) >= 0) {
-        sorted = true
-      } else {
-        // move minimum children up
-        val minimumChildHashTableIndex = hashTableIndexFor(minimumChildIndex)
-        heapElementsLocators(elementIndex) = heapElementsLocators(minimumChildIndex)
-        hashTable.heapIndexes(minimumChildHashTableIndex) = elementIndex
-
-        moved = true
-        elementIndex = minimumChildIndex
-      }
-    }
-    if (moved) {
-      // place initial element in its right position
-      heapElementsLocators(elementIndex) = elementLocator
-      hashTable.heapIndexes(elementHashTableIndex) = elementIndex
-    }
-  }
-
-  /**
-   * Expands arrays if we run out of capacity due to too much insertions.
-   */
-  private def ensureCapacity(): Unit = {
-    if (sz >= heapElementsLocators.length) {
-      // ensure capacity
-      heapElementsLocators = Array.copyOf(heapElementsLocators, heapElementsLocators.length * 2)
-    }
-  }
-
-  private def insert(hashTableIndex: Int, locatorIndex: Int, heapIndex: Int, inserted: Boolean): Unit = {
-    ensureCapacity()
-    if (inserted) {
-      // insert new element in heap
-      heapElementsLocators(heapIndex) = locatorIndex
-      heapifyUpFrom(heapIndex)
-      sz += 1
-    } else {
-      // locate already inserted element and update its priority
-      val heapIndex = hashTable.heapIndexes(hashTableIndex)
-      // require(elementFor(heapIndex) == element, s"${elementFor(heapIndex)} $element")
-      // heapElementsLocators(heapIndex) = locatorIndex
-      heapifyUpFrom(heapIndex)
-      heapifyDownFrom(heapIndex)
-    }
-  }
-
   /**
    * Inserts an element in the heap using the provided locator of the element. If the element was already in the heap
    * this operation can be used to update its priority within the heap (the element should be `equal` to previous one
@@ -245,30 +114,6 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
   }
 
   /**
-   * Increases an element that is already in the heap using the provided index of the element in the hash table. Does
-   * nothing if element is not in heap or if new value does not increase stored one.
-   *
-   * @param hashTableIndex index of the element in the hash table.
-   * @param element        element to increase in heap.
-   */
-  private def increaseIndex(hashTableIndex: Int, element: T): Boolean = {
-    var increased = false
-    if (hashTable.isInHeap(hashTableIndex)) {
-      // locate already inserted element and update its priority
-      val heapIndex = hashTable.heapIndexes(hashTableIndex)
-      require(heapElementsLocators(heapIndex) == element, s"${heapElementsLocators(heapIndex)} $element")
-
-      val cmp = priority.compare(element, elementFor(heapIndex))
-      if (cmp > 0) {
-        hashTable.keys(hashTableIndex) = element
-        heapifyDownFrom(heapIndex)
-        increased = true
-      }
-    }
-    increased
-  }
-  
-  /**
    * Increases an element that is already in the heap using the provided locator of the element. Does nothing if element
    * is not in heap or if new value does not increase stored one. Operation is O(log n).
    *
@@ -292,29 +137,29 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
   }
 
   /**
-   * Decreases an element that is already in the heap using the provided index of the element in the hash table. Does
-   * nothing if element is not in heap or if new value does not decrease stored one.
+   * Increases an element that is already in the heap using the provided index of the element in the hash table. Does
+   * nothing if element is not in heap or if new value does not increase stored one.
    *
    * @param hashTableIndex index of the element in the hash table.
    * @param element        element to increase in heap.
    */
-  private def decreaseIndex(hashTableIndex: Int, element: T): Boolean = {
-    var decreased = false
+  private def increaseIndex(hashTableIndex: Int, element: T): Boolean = {
+    var increased = false
     if (hashTable.isInHeap(hashTableIndex)) {
       // locate already inserted element and update its priority
       val heapIndex = hashTable.heapIndexes(hashTableIndex)
-      require(elementFor(heapIndex) == element, s"${elementFor(hashTable.heapIndexes(hashTableIndex))} $element")
+      require(heapElementsLocators(heapIndex) == element, s"${heapElementsLocators(heapIndex)} $element")
 
-      val cmp = priority.compare(element, hashTable.keys(hashTableIndex))
-      if (cmp < 0) {
+      val cmp = priority.compare(element, elementFor(heapIndex))
+      if (cmp > 0) {
         hashTable.keys(hashTableIndex) = element
-        heapifyUpFrom(heapIndex)
-        decreased = true
+        heapifyDownFrom(heapIndex)
+        increased = true
       }
     }
-    decreased
+    increased
   }
-  
+
   /**
    * Decreases an element that is already in the heap using the provided locator of the element. Does nothing if element
    * is not in heap or if new value does not decrease stored one. Operation is O(log n).
@@ -337,7 +182,7 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
     val hashTableIndex = hashTableIndexFor(element)
     decreaseIndex(hashTableIndex, element)
   }
-  
+
   /**
    * Returns the first element in the heap (the one with the smallest priority). Operation is O(1).
    *
@@ -383,7 +228,65 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
     }
     first
   }
-  
+
+  private def hashTableIndexFor(index: Int): Int =
+    hashTable.locatorToHashTableIndexes(heapElementsLocators(index))
+
+  // moves element in heap at given index down as needed in order to restore heap order property
+  private def heapifyDownFrom(index: Int): Unit = {
+    var elementIndex = index
+    val element = elementFor(elementIndex)
+    val elementLocator = heapElementsLocators(elementIndex)
+    val elementHashTableIndex = hashTableIndexFor(elementIndex)
+
+    var sorted = false
+    var moved = false
+    var minimumChildIndex = 0
+
+    while ( {
+      minimumChildIndex = leftChildIndexOf(elementIndex)
+      !sorted && isValidIndex(minimumChildIndex)
+    }) {
+      var minimumChild = elementFor(minimumChildIndex)
+      // find minimum child
+      val rightChildIndex = minimumChildIndex + 1
+      if (isValidIndex(rightChildIndex)) {
+        val rightChild = elementFor(rightChildIndex)
+        if (priority.compare(rightChild, minimumChild) < 0) {
+          minimumChildIndex = rightChildIndex
+          minimumChild = rightChild
+        }
+      }
+      if (priority.compare(minimumChild, element) >= 0) {
+        sorted = true
+      } else {
+        // move minimum children up
+        val minimumChildHashTableIndex = hashTableIndexFor(minimumChildIndex)
+        heapElementsLocators(elementIndex) = heapElementsLocators(minimumChildIndex)
+        hashTable.heapIndexes(minimumChildHashTableIndex) = elementIndex
+
+        moved = true
+        elementIndex = minimumChildIndex
+      }
+    }
+    if (moved) {
+      // place initial element in its right position
+      heapElementsLocators(elementIndex) = elementLocator
+      hashTable.heapIndexes(elementHashTableIndex) = elementIndex
+    }
+  }
+
+  private def elementFor(index: Int): T =
+    hashTable.keys(hashTableIndexFor(index))
+
+  // returns index of left child node in heap
+  private inline def leftChildIndexOf(inline index: Int): Int =
+    index * 2 + 1
+
+  // checks if an index corresponds to an element in heap
+  private inline def isValidIndex(inline index: Int): Boolean =
+    index < sz
+
   /**
    * Checks whether an element is currently included in heap. Operation is O(1) effective.
    *
@@ -395,6 +298,12 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
     containsIndex(hashTableIndex)
   }
 
+  protected def hashTableIndexFor(element: T): Int =
+    hashTable.searchHashTableIndexOf(element)
+
+  private def containsIndex(hashTableIndex: Int): Boolean =
+    hashTable.isInHeap(hashTableIndex)
+
   /**
    * Checks whether an element is currently included in heap. Operation is O(1).
    *
@@ -403,8 +312,99 @@ class IndexedMinHeap[T](initialCapacity: Int)(using priority: Ordering[T])(using
    */
   def contains(locator: Locator): Boolean =
     containsIndex(hashTableIndexFor(locator))
-  
-  private def containsIndex(hashTableIndex: Int): Boolean =
-    hashTable.isInHeap(hashTableIndex)
+
+  @targetName("hashTableIndexForLocator")
+  protected def hashTableIndexFor(locator: Locator): Int =
+    hashTable.locatorToHashTableIndexes(locator.index)
+
+  // returns index of parent node in heap
+  private inline def parentIndexOf(inline index: Int): Int =
+    (index - 1) / 2
+
+  // checks if an element is not the root of heap
+  private inline def hasParentIndex(inline index: Int): Boolean =
+    index > IndexedMinHeap.rootIndex
+
+  // moves element in heap at given index up as needed in order to restore heap order property
+  private def heapifyUpFrom(index: Int): Unit = {
+    var elementIndex = index
+    val element = elementFor(elementIndex)
+    val elementLocator = heapElementsLocators(elementIndex)
+    val elementHashTableIndex = hashTableIndexFor(elementIndex)
+
+    var sorted = false
+    var moved = false
+    while (!sorted && hasParentIndex(elementIndex)) {
+      val parentIndex = parentIndexOf(elementIndex)
+      val parent = elementFor(parentIndex)
+      if (priority.compare(element, parent) >= 0) {
+        sorted = true
+      } else {
+        // move parent down
+        val parentHashTableIndex = hashTableIndexFor(parentIndex)
+        heapElementsLocators(elementIndex) = heapElementsLocators(parentIndex)
+        hashTable.heapIndexes(parentHashTableIndex) = elementIndex
+
+        moved = true
+        elementIndex = parentIndex
+      }
+    }
+    if (moved) {
+      // place initial element in its right position
+      heapElementsLocators(elementIndex) = elementLocator
+      hashTable.heapIndexes(elementHashTableIndex) = elementIndex
+    }
+  }
+
+  /**
+   * Expands arrays if we run out of capacity due to too much insertions.
+   */
+  private def ensureCapacity(): Unit = {
+    if (sz >= heapElementsLocators.length) {
+      // ensure capacity
+      heapElementsLocators = Array.copyOf(heapElementsLocators, heapElementsLocators.length * 2)
+    }
+  }
+
+  private def insert(hashTableIndex: Int, locatorIndex: Int, heapIndex: Int, inserted: Boolean): Unit = {
+    ensureCapacity()
+    if (inserted) {
+      // insert new element in heap
+      heapElementsLocators(heapIndex) = locatorIndex
+      heapifyUpFrom(heapIndex)
+      sz += 1
+    } else {
+      // locate already inserted element and update its priority
+      val heapIndex = hashTable.heapIndexes(hashTableIndex)
+      // require(elementFor(heapIndex) == element, s"${elementFor(heapIndex)} $element")
+      // heapElementsLocators(heapIndex) = locatorIndex
+      heapifyUpFrom(heapIndex)
+      heapifyDownFrom(heapIndex)
+    }
+  }
+
+  /**
+   * Decreases an element that is already in the heap using the provided index of the element in the hash table. Does
+   * nothing if element is not in heap or if new value does not decrease stored one.
+   *
+   * @param hashTableIndex index of the element in the hash table.
+   * @param element        element to increase in heap.
+   */
+  private def decreaseIndex(hashTableIndex: Int, element: T): Boolean = {
+    var decreased = false
+    if (hashTable.isInHeap(hashTableIndex)) {
+      // locate already inserted element and update its priority
+      val heapIndex = hashTable.heapIndexes(hashTableIndex)
+      require(elementFor(heapIndex) == element, s"${elementFor(hashTable.heapIndexes(hashTableIndex))} $element")
+
+      val cmp = priority.compare(element, hashTable.keys(hashTableIndex))
+      if (cmp < 0) {
+        hashTable.keys(hashTableIndex) = element
+        heapifyUpFrom(heapIndex)
+        decreased = true
+      }
+    }
+    decreased
+  }
 }
 

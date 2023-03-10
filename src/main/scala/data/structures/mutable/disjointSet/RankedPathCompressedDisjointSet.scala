@@ -23,6 +23,27 @@ trait RankedPathCompressedDisjointSet[A] extends DisjointSet[A] {
     xRoot == yRoot
   }
 
+  final def union(x: A, y: A): Boolean = {
+    val (xRoot, xRank) = findRoot(x)
+    val (yRoot, yRank) = findRoot(y)
+
+    if (xRoot == yRoot) {
+      false
+    } else {
+      // link tree with smallest rank below the other
+      if (xRank < yRank) {
+        parents(xRoot) = yRoot
+      } else if (xRank > yRank) {
+        parents(yRoot) = xRoot
+      } else {
+        parents(yRoot) = xRoot
+        parents(xRoot) -= 1 // same ranks, new parent gets its rank increased
+      }
+      nComponents -= 1
+      true
+    }
+  }
+
   protected def findRoot(x: A): (Int, Int) =
     findIndexRoot(indexOf(x))
 
@@ -48,27 +69,6 @@ trait RankedPathCompressedDisjointSet[A] extends DisjointSet[A] {
 
     val weight = -parents(root)
     (root, weight)
-  }
-
-  final def union(x: A, y: A): Boolean = {
-    val (xRoot, xRank) = findRoot(x)
-    val (yRoot, yRank) = findRoot(y)
-
-    if (xRoot == yRoot) {
-      false
-    } else {
-      // link tree with smallest rank below the other
-      if (xRank < yRank) {
-        parents(xRoot) = yRoot
-      } else if (xRank > yRank) {
-        parents(yRoot) = xRoot
-      } else {
-        parents(yRoot) = xRoot
-        parents(xRoot) -= 1 // same ranks, new parent gets its rank increased
-      }
-      nComponents -= 1
-      true
-    }
   }
 }
 

@@ -40,7 +40,7 @@ object Test extends App {
   wg.addEdge(WeightedEdge(3, 4, 30))
 
   println(wg.successors(3))
-  println(wg.successorsAndWeights(3))
+  println(wg.incidentsFrom(3))
   println(wg.vertices)
   println(wg.edges)
 }

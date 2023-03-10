@@ -1,28 +1,50 @@
 package data.structures.mutable.graph
 
-import scala.collection.immutable
-
 /**
  * Interface for representing a weighted graph.
  *
- * @tparam V  type of vertices in graph.
- * @tparam W  type of weights in graph.
- * @tparam WE type constructor for weighted edges in graph.
+ * @tparam V type of vertices in graph.
+ * @tparam W type of weights in graph.
  * @author Pepe Gallardo
  */
-
-trait WeightedGraph[V, W, WE[+_, +_]] extends Graph[V, [X] =>> WE[X, W]] {
+trait WeightedGraph[V, W] extends Graph[V, [X] =>> IsWeightedEdge[X, W]] {
+  /**
+   * Adds a weighted edge to graph connecting `vertex1` to `vertex2` with weight `weight`.
+   *
+   * @param vertex1 one endpoint of weighted edge to add.
+   * @param vertex2 another endpoint of weighted edge to add.
+   * @param weight  weight of weighted edge to add.
+   * @return `true` if weighted edge was not in graph before.
+   */
   def addEdge(vertex1: V, vertex2: V, weight: W): Boolean
 
-  def weightOfEdge(vertex1: V, vertex2: V): Option[W]
+  /**
+   * Deletes a weighted edge from graph.
+   *
+   * @param vertex1 one endpoint of weighted edge to delete.
+   * @param vertex2 another endpoint of weighted edge to delete.
+   * @param weight  weight of weighted edge to delete.
+   * @return `true` if weighted edge was in graph before.
+   */
+  def deleteEdge(vertex1: V, vertex2: V, weight: W): Boolean
 
   /**
-   * Returns a set with all vertices that are direct successors of vertex `vertex` and weights of corresponding
-   * weighted edges.
+   * Checks whether a weighted edge is included in graph.
    *
-   * @param vertex source vertex for which we seek direct successors.
-   * @return a set with all vertices that are direct successors of vertex `vertex` and weights of corresponding
-   *         weighted edges.
+   * @param vertex1 one endpoint of weighted edge to check.
+   * @param vertex2 another endpoint of weighted edge to check.
+   * @param weight  weight of weighted edge to check.
+   * @return `true` if weighted edge is included in graph.
    */
-  def successorsAndWeights(vertex: V): immutable.Set[(V, W)]
+  def containsEdge(vertex1: V, vertex2: V, weight: W): Boolean
+
+  /**
+   * Returns weight of a weighted edge which is included in graph.
+   *
+   * @param vertex1 one endpoint of weighted edge.
+   * @param vertex2 another endpoint of weighted edge.
+   * @return `Some(weight)` if weighted edge is in graph and its weight is `weight` or `None` if weighted edge is not
+   *         in graph.
+   */
+  def weightOfEdge(vertex1: V, vertex2: V): Option[W]
 }

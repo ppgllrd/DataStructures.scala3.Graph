@@ -35,21 +35,6 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
   inline def isFree(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
     array(hashTableIndex) == HashTable.freeMark
 
-  inline def isFree(inline hashTableIndex: Int): Boolean =
-    isFree(heapIndexes, hashTableIndex)
-
-  // a cell is occupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
-  inline def isOccupied(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
-    !isFree(array, hashTableIndex)
-
-  inline def isOccupied(inline hashTableIndex: Int): Boolean =
-    isOccupied(heapIndexes, hashTableIndex)
-
-  // a cell is reserved if it stores an element that was extracted from heap or if it is reserved for inserting an
-  // element that has already an associated locator
-  inline def isReserved(inline hashTableIndex: Int): Boolean =
-    heapIndexes(hashTableIndex) == HashTable.reservedMark
-
   inline def isInHeap(inline hashTableIndex: Int): Boolean =
     heapIndexes(hashTableIndex) >= 0
 
@@ -57,16 +42,12 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
   inline def noLocator(inline hashTableIndex: Int): Boolean =
     hashTableIndexToLocators(hashTableIndex) == HashTable.noLocator
 
-  // computes hash of an element
-  private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
+  def insert(key: T, heapIndex: Int): (Boolean, Int, Int) = {
+    rehashing()
 
-  // searches for hashTableIndex of an element in the hash table
-  def searchHashTableIndexOf(key: T): Int = {
-    var hashTableIndex = hash(key)
-    while (isOccupied(hashTableIndex) && keys(hashTableIndex) != key) {
-      hashTableIndex = (hashTableIndex + 1) % keys.length
-    }
-    hashTableIndex
+    val hashTableIndex = searchHashTableIndexOf(key)
+    val (inserted, locatorIndex) = insert(hashTableIndex, key, heapIndex)
+    (inserted, locatorIndex, hashTableIndex)
   }
 
   /**
@@ -103,13 +84,10 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     (inserted, locatorIndex)
   }
 
-  def insert(key: T, heapIndex: Int): (Boolean, Int, Int) = {
-    rehashing()
-
-    val hashTableIndex = searchHashTableIndexOf(key)
-    val (inserted, locatorIndex) = insert(hashTableIndex, key, heapIndex)
-    (inserted, locatorIndex, hashTableIndex)
-  }
+  // a cell is reserved if it stores an element that was extracted from heap or if it is reserved for inserting an
+  // element that has already an associated locator
+  inline def isReserved(inline hashTableIndex: Int): Boolean =
+    heapIndexes(hashTableIndex) == HashTable.reservedMark
 
   /**
    * Returns a locator for provided heap element. A locator can later be used for fast access to the element both in
@@ -130,6 +108,9 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     locatorFor(hashTableIndex)
   }
 
+  inline def isFree(inline hashTableIndex: Int): Boolean =
+    isFree(heapIndexes, hashTableIndex)
+
   def locatorFor(hashTableIndex: Int): Locator = {
     val locatorIndex = hashTableIndexToLocators(hashTableIndex)
     if (locatorIndex == HashTable.noLocator) {
@@ -143,9 +124,6 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
       new Locator(locatorIndex)
     }
   }
-
-  // computes current load factor of hash table
-  protected def loadFactor: Double = sz.toDouble / keys.length
 
   // performs rehashing if current load factor exceeds maximum allowed one
   private[heap] def rehashing(): Boolean = {
@@ -170,4 +148,26 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     }
     rehashed
   }
+
+  // a cell is occupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
+  inline def isOccupied(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
+    !isFree(array, hashTableIndex)
+
+  // searches for hashTableIndex of an element in the hash table
+  def searchHashTableIndexOf(key: T): Int = {
+    var hashTableIndex = hash(key)
+    while (isOccupied(hashTableIndex) && keys(hashTableIndex) != key) {
+      hashTableIndex = (hashTableIndex + 1) % keys.length
+    }
+    hashTableIndex
+  }
+
+  inline def isOccupied(inline hashTableIndex: Int): Boolean =
+    isOccupied(heapIndexes, hashTableIndex)
+
+  // computes hash of an element
+  private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
+
+  // computes current load factor of hash table
+  protected def loadFactor: Double = sz.toDouble / keys.length
 }

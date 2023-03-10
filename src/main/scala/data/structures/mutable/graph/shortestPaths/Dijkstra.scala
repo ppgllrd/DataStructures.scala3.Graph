@@ -1,6 +1,6 @@
 package data.structures.mutable.graph.shortestPaths
 
-import data.structures.mutable.graph.{GraphException, WeightedEdge, WeightedGraph}
+import data.structures.mutable.graph.{GraphException, IsWeightedEdge, WeightedEdge, WeightedGraph}
 import data.structures.mutable.heap
 import data.structures.mutable.heap.IndexedMinHeapMap
 
@@ -20,8 +20,8 @@ object Dijkstra {
    * @return an object for computing shortest path from one source vertex to rest of reachable vertices in a non-negatively
    *         weighted graph using Dijkstra algorithm.
    */
-  def apply[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge], source: V)(using ord: Ordering[W], num: Numeric[W])
-    : Dijkstra[V, W] = new Dijkstra(weightedGraph, source)(using ord, num)
+  def apply[V, W](weightedGraph: WeightedGraph[V, W], source: V)(using ord: Ordering[W], num: Numeric[W])
+  : Dijkstra[V, W] = new Dijkstra(weightedGraph, source)(using ord, num)
 }
 
 /**
@@ -32,18 +32,44 @@ object Dijkstra {
  * @param source        the source vertex for constructing paths.
  * @param ord           `Ordering` used for comparing weights of edges.
  * @param num           `Numeric` used for adding weights of edges.
- * @tparam V  type of vertices in weighted graph.
- * @tparam W  type of weights in weighted graph.
+ * @tparam V type of vertices in weighted graph.
+ * @tparam W type of weights in weighted graph.
  * @author Pepe Gallardo
  */
-class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge], source: V)(using ord: Ordering[W],
-  num: Numeric[W]):
+class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W], source: V)
+  (using ord: Ordering[W], num: Numeric[W]):
   private val priority = Ordering.by((vertexAndCost: VertexAndCost) => vertexAndCost.cost)
   private val priorityQueue = IndexedMinHeapMap[VertexAndCost, VertexAndCost](weightedGraph.order)(using priority)
 
-  private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
+  /**
+   * Returns cost of shortest path from vertex `source` to vertex `destination`.
+   *
+   * @param destination destination vertex of sought path.
+   * @return cost of shortest path from vertex `source` to vertex `destination`.
+   */
+  def lowestCostTo(destination: V): W =
+    priorityQueue.map.get(withKey(destination)) match
+      case None => throw GraphException(s"optimalCostTo: vertex $destination cannot be reached from vertex $source")
+      case Some(VertexAndCost(_, cost)) => cost
 
   run()
+
+  /**
+   * Returns shortest path from vertex `source` to vertex `destination`.
+   *
+   * @param destination destination vertex of sought path.
+   * @return shortest path from vertex `source` to vertex `destination`.
+   */
+  def shortestPathTo(destination: V): List[V] =
+    priorityQueue.map.get(withKey(destination)) match
+      case None => throw GraphException(s"optimalPathTo: vertex $destination cannot be reached from vertex $source")
+      case Some(VertexAndCost(src, _)) =>
+        var path = List(destination)
+        if (destination != source)
+          path = src :: path
+        while (path.head != source)
+          path = priorityQueue.map(withKey(path.head)).vertex :: path
+        path
 
   private def run(): Unit =
     // number of destination vertices for which we yet have to find its shortest path
@@ -72,7 +98,7 @@ class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge], source: V
         // we now know optimal path to vertex
         numberOfDestinationsUnsolved -= 1
 
-        for ((incident, weight) <- weightedGraph.successorsAndWeights(vertex))
+        for (IsWeightedEdge(_, incident, weight) <- weightedGraph.incidentsFrom(vertex))
           val incidentLocator = priorityQueue.locatorFor(withKey(incident))
           val newCost = num.plus(cost, weight)
 
@@ -90,6 +116,8 @@ class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge], source: V
                 sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
               }
 
+  private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
+
   private final case class VertexAndCost(vertex: V, cost: W):
     // note that equality only considers vertex in structure but not its cost
     override def equals(other: Any): Boolean = other match
@@ -101,31 +129,3 @@ class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W, WeightedEdge], source: V
 
     override def hashCode(): Int =
       vertex.hashCode()
-
-  /**
-   * Returns cost of shortest path from vertex `source` to vertex `destination`.
-   *
-   * @param destination destination vertex of sought path.
-   * @return cost of shortest path from vertex `source` to vertex `destination`.
-   */
-  def lowestCostTo(destination: V): W =
-    priorityQueue.map.get(withKey(destination)) match
-      case None => throw GraphException(s"optimalCostTo: vertex $destination cannot be reached from vertex $source")
-      case Some(VertexAndCost(_, cost)) => cost
-
-  /**
-   * Returns shortest path from vertex `source` to vertex `destination`.
-   *
-   * @param destination destination vertex of sought path.
-   * @return shortest path from vertex `source` to vertex `destination`.
-   */
-  def shortestPathTo(destination: V): List[V] =
-    priorityQueue.map.get(withKey(destination)) match
-      case None => throw GraphException(s"optimalPathTo: vertex $destination cannot be reached from vertex $source")
-      case Some(VertexAndCost(src, _)) =>
-        var path = List(destination)
-        if (destination != source)
-          path = src :: path
-        while (path.head != source)
-          path = priorityQueue.map(withKey(path.head)).vertex :: path
-        path

@@ -24,6 +24,27 @@ trait WeightedPathCompressedDisjointSet[A] extends DisjointSet[A] {
     xRoot == yRoot
   }
 
+  final def union(x: A, y: A): Boolean = {
+    val (xRoot, xSize) = findRoot(x)
+    val (yRoot, ySize) = findRoot(y)
+
+    if (xRoot == yRoot) {
+      false
+    } else {
+      // link smallest tree below larger one
+      // update size for new common root
+      if (xSize < ySize) {
+        parents(xRoot) = yRoot
+        parents(yRoot) -= xSize
+      } else {
+        parents(yRoot) = xRoot
+        parents(xRoot) -= ySize
+      }
+      nComponents -= 1
+      true
+    }
+  }
+
   protected def findRoot(x: A): (Int, Int) =
     findIndexRoot(indexOf(x))
 
@@ -49,27 +70,6 @@ trait WeightedPathCompressedDisjointSet[A] extends DisjointSet[A] {
 
     val weight = -parents(root)
     (root, weight)
-  }
-
-  final def union(x: A, y: A): Boolean = {
-    val (xRoot, xSize) = findRoot(x)
-    val (yRoot, ySize) = findRoot(y)
-
-    if (xRoot == yRoot) {
-      false
-    } else {
-      // link smallest tree below larger one
-      // update size for new common root
-      if (xSize < ySize) {
-        parents(xRoot) = yRoot
-        parents(yRoot) -= xSize
-      } else {
-        parents(yRoot) = xRoot
-        parents(xRoot) -= ySize
-      }
-      nComponents -= 1
-      true
-    }
   }
 }
 

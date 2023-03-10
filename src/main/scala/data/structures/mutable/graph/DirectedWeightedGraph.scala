@@ -1,24 +1,35 @@
 package data.structures.mutable.graph
 
-import scala.collection.immutable
-
 /**
  * Interface for representing a directed weighted graph.
  *
- * @tparam V  type of vertices in graph.
- * @tparam W  type of weights in graph.
- * @tparam WE type constructor for directed weighted edges in graph.
+ * @tparam V type of vertices in graph.
+ * @tparam W type of weights in graph.
  * @author Pepe Gallardo
  */
-trait DirectedWeightedGraph[V, W, WE[+_, +_]] extends DirectedGraph[V, [X] =>> WE[X, W]]
-  with WeightedGraph[V, W, WE] {
+trait DirectedWeightedGraph[V, W] extends DirectedGraph[V] with Graph[V, [X] =>> DirectedWeightedEdge[X, W]]
+  with WeightedGraph[V, W] {
   /**
-   * Returns a set with all vertices that are direct predecessors of `destination` and weights of corresponding directed
-   * weighted edges.
+   * Adds a directed weighted edge to a graph.
    *
-   * @param destination destination for which we seek direct successors.
-   * @return a set with all vertices that are direct predecessors of `destination` and weights of corresponding directed
-   *         weighted edges.
+   * @param directedWeightedEdge directed weighted edge to add to graph.
+   * @return `true` if edge was not in graph before.
    */
-  def predecessorsAndWeights(destination: V): immutable.Set[(V, W)] = ???
+  def addEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Unit
+
+  /**
+   * Checks whether an directed weighted edge is included in graph.
+   *
+   * @param directedWeightedEdge directed weighted edge for which to check inclusion.
+   * @return `true` if directed weighted edge is included in graph.
+   */
+  def containsEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Boolean
+
+  /**
+   * Deletes a directed weighted edge from graph.
+   *
+   * @param directedWeightedEdge directed weighted edge to delete.
+   * @return `true` if directed weighted edge was in graph before.
+   */
+  def deleteEdge(directedWeightedEdge: DirectedWeightedEdge[V, W]): Unit
 }

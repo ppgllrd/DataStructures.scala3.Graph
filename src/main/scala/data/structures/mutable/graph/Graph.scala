@@ -9,7 +9,7 @@ import scala.collection.immutable
  * @tparam E type constructor for edges in graph.
  * @author Pepe Gallardo
  */
-trait Graph[V, E[+_]] extends traversal.Traversable[V] {
+trait Graph[V, +E[_]] extends data.structures.mutable.graph.traversal.Traversable[V] {
   /**
    * Adds a vertex to a graph.
    *
@@ -49,39 +49,20 @@ trait Graph[V, E[+_]] extends traversal.Traversable[V] {
   def order: Int
 
   /**
-   * Returns a set with all vertices incident on vertex `vertex`.
+   * Returns a set with all edges in graph.
    *
-   * @param vertex endpoint for which we seek incident vertices.
-   * @return a set with all vertices incident on vertex `vertex`.
+   * @return a set with all edges in graph.
    */
-  def successors(vertex: V): immutable.Set[V]
+  def edges[Edge[X] >: E[X]]: immutable.Set[Edge[V]]
 
   /**
-   * Returns number of vertices incident on vertex `vertex`.
+   * Returns number of edges in graph.
    *
-   * @param vertex endpoint for which we seek its number of incident vertices.
-   * @return number of vertices incident on vertex `vertex`.
+   * @return number of edges in graph.
    */
-  def degree(vertex: V): Int
+  def size: Int
 
   /**
-   * Adds an edge to graph connecting `vertex1` to `vertex2`.
-   *
-   * @param vertex1 one endpoint of edge to add.
-   * @param vertex2 another endpoint of edge to add.
-   * @return `true` if edge was not in graph before.
-   */
-  def addEdge(vertex1: V, vertex2: V): Boolean
-
-  /**
-   * Adds an edge to a graph.
-   *
-   * @param edge edge to add to graph.
-   * @return `true` if edge was not in graph before.
-   */
-  def addEdge(edge: E[V]): Boolean
-
-  /**Weighted
    * Deletes an edge from graph.
    *
    * @param vertex1 one endpoint of edge to delete.
@@ -89,14 +70,6 @@ trait Graph[V, E[+_]] extends traversal.Traversable[V] {
    * @return `true` if edge was in graph before.
    */
   def deleteEdge(vertex1: V, vertex2: V): Boolean
-
-  /**
-   * Deletes an edge from graph.
-   *
-   * @param edge edge to delete from graph.
-   * @return `true` if edge was in graph before.
-   */
-  def deleteEdge(edge: E[V]): Boolean
 
   /**
    * Checks whether an edge is included in graph.
@@ -108,24 +81,34 @@ trait Graph[V, E[+_]] extends traversal.Traversable[V] {
   def containsEdge(vertex1: V, vertex2: V): Boolean
 
   /**
-   * Checks whether an edge is included in graph.
+   * Returns a set with all vertices incident from vertex `vertex`.
    *
-   * @param edge edge to check inclusion in graph for.
-   * @return `true` if edge is included in graph.
+   * @param vertex starting vertex for which we seek incident vertices.
+   * @return a set with all vertices incident from vertex `vertex`.
    */
-  def containsEdge(edge: E[V]): Boolean
+  def successors(vertex: V): immutable.Set[V]
 
   /**
-   * Returns a set with all edges in graph.
+   * Returns a set with all vertices incident to vertex `vertex`.
    *
-   * @return a set with all edges in graph.
+   * @param vertex ending vertex for which we seek incident vertices.
+   * @return a set with all vertices incident on vertex `vertex`.
    */
-  def edges: immutable.Set[E[V]]
+  def predecessors(vertex: V): immutable.Set[V]
 
   /**
-   * Returns number of edges in graph.
+   * Returns a set with all edges incident from vertex `vertex`.
    *
-   * @return number of edges in graph.
+   * @param vertex starting vertex for which we seek incident from edges.
+   * @return a set with all edges incident from vertex `vertex`.
    */
-  def size: Int
+  def incidentsFrom[Edge[X] >: E[X]](vertex: V): immutable.Set[Edge[V]]
+
+  /**
+   * Returns a set with all edges incident to vertex `vertex`.
+   *
+   * @param vertex ending vertex for which we seek incident to edges.
+   * @return a set with all edges incident to vertex `vertex`.
+   */
+  def incidentsTo[Edge[X] >: E[X]](vertex: V): immutable.Set[Edge[V]]
 }

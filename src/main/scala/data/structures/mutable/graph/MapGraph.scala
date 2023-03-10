@@ -1,111 +1,61 @@
 package data.structures.mutable.graph
 
-import scala.collection.{immutable, mutable}
+import scala.collection.immutable
 
 object MapGraph {
   /**
-   * Constructs an undirected graph using a mutable map.
+   * Constructs an undirected unweighted graph using a mutable map.
    *
    * @tparam V type of vertices in graph.
-   * @return an undirected graph using a mutable map.
+   * @return an undirected unweighted graph using a mutable map.
    */
   def apply[V](): MapGraph[V] = new MapGraph()
 }
 
 /**
- * An implementation of undirected graphs using a mutable map.
+ * An implementation of undirected unweighted graphs using a mutable map.
  *
  * @tparam V type of vertices in graph.
- * @author Pepe Gallardo          
+ * @author Pepe Gallardo
  */
-class MapGraph[V] extends Graph[V, Edge] {
-  private val succs = mutable.Map[V, mutable.Set[V]]()
+class MapGraph[V] extends UndirectedUnweightedGraph[V] {
+  private var xs = List[Edge[V]]()
 
-  override def addVertex(vertex: V): Boolean =
-    succs.get(vertex) match
-      case None => succs(vertex) = mutable.Set[V]()
-        true
-      case Some(_) => false
+  override def addVertex(vertex: V): Boolean = ???
 
-  override def deleteVertex(vertex: V): Boolean =
-    succs.get(vertex) match
-      case None => false
-      case Some(incidents) =>
-        succs.remove(vertex)
-        for (incident <- incidents)
-          succs(incident).remove(vertex)
-        true
+  override def containsVertex(vertex: V): Boolean = ???
 
-  override def containsVertex(vertex: V): Boolean =
-    succs.isDefinedAt(vertex)
+  override def deleteVertex(vertex: V): Boolean = ???
 
-  override def vertices: immutable.Set[V] =
-    var set = immutable.Set[V]()
-    for (vertex <- succs.keys)
-      set = set + vertex
-    set
+  override def vertices: immutable.Set[V] = ???
 
-  override def order: Int =
-    succs.keys.size
+  override def order: Int = ???
 
-  override def successors(vertex: V): immutable.Set[V] =
-    succs.get(vertex) match
-      case None => throw GraphException(s"successors: vertex $vertex is not in graph")
-      case Some(incidents) =>
-        var set = immutable.Set[V]()
-        for (incident <- incidents)
-          set = set + incident
-        set
 
-  override def degree(vertex: V): Int =
-    succs.get(vertex) match
-      case None => throw GraphException(s"degree: vertex $vertex is not in graph")
-      case Some(incidents) => incidents.size
+  override def addEdge(vertex1: V, vertex2: V): Boolean = ???
 
-  override def addEdge(edge: Edge[V]): Boolean =
-    addEdge(edge.vertex1, edge.vertex2)
+  override def addEdge(edge: Edge[V]): Unit = ???
 
-  override def addEdge(vertex1: V, vertex2: V): Boolean =
-    succs.get(vertex1) match
-      case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-      case Some(incidents1) => succs.get(vertex2) match
-        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-        case Some(incidents2) =>
-          val added = incidents1.add(vertex2)
-          incidents2.add(vertex1)
-          added
+  override def containsEdge(vertex1: V, vertex2: V): Boolean = ???
 
-  override def deleteEdge(edge: Edge[V]): Boolean =
-    deleteEdge(edge.vertex1, edge.vertex2)
+  override def containsEdge(edge: Edge[V]): Boolean = ???
 
-  override def deleteEdge(vertex1: V, vertex2: V): Boolean =
-    succs.get(vertex1) match
-      case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-      case Some(incidents1) => succs.get(vertex2) match
-        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-        case Some(incidents2) =>
-          val deleted = incidents1.remove(vertex2)
-          incidents2.remove(vertex1)
-          deleted
+  override def deleteEdge(vertex1: V, vertex2: V): Boolean = ???
 
-  override def containsEdge(edge: Edge[V]): Boolean =
-    containsEdge(edge.vertex1, edge.vertex2)
+  override def deleteEdge(edge: Edge[V]): Unit = ???
 
-  override def containsEdge(vertex1: V, vertex2: V): Boolean =
-    succs.get(vertex1) match
-      case None => false
-      case Some(incidents) => incidents.contains(vertex2)
+  override def edges[E[X] >: Edge[X]]: immutable.Set[E[V]] = ???
 
-  override def edges: immutable.Set[Edge[V]] =
-    var set = immutable.Set[Edge[V]]()
-    for ((vertex1, incidents) <- succs)
-      for (vertex2 <- incidents)
-        set = set + Edge(vertex1, vertex2)
-    set
+  override def size: Int = ???
 
-  override def size: Int =
-    var numEdges = 0
-    for (incidents <- succs.values)
-      numEdges += incidents.size
-    numEdges / 2
+
+  override def adjacents(vertex: V): immutable.Set[V] = ???
+
+  override def incidents[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
+
+  override def incidentsFrom[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
+
+  override def incidentsTo[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
+
+  override def degree(vertex: V): Int = ???
 }

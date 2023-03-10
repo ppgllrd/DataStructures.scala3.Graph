@@ -10,8 +10,8 @@ package data.structures.mutable.graph
  * @tparam W type of weights in edge.
  * @author Pepe Gallardo
  */
-class DirectedWeightedEdge[+V, +W](source: V, destination: V, val weight: W) extends DirectedEdge[V](source,
-  destination) {
+class DirectedWeightedEdge[+V, +W](source: V, destination: V, val weight: W) extends DirectedEdge[V](source, destination)
+  with IsWeightedEdge[V, W] with IsDirectedWeightedEdge[V, W] {
   override def equals(other: Any): Boolean = other match {
     case that: DirectedWeightedEdge[?, ?] =>
       (that canEqual this) &&

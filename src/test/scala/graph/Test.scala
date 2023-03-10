@@ -22,6 +22,8 @@ object Test extends App {
   println(g.successors(3))
   println(g.vertices)
   println(g.edges)
+  println(g.incidentsFrom(3))
+  println(g.incidentsTo(3))
   val traversal = g.breadthFirstTraversal(1)
   println(traversal.pathTo(4))
   println()

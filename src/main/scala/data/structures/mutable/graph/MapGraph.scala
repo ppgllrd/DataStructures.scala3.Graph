@@ -1,6 +1,6 @@
 package data.structures.mutable.graph
 
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 
 object MapGraph {
   /**
@@ -19,43 +19,120 @@ object MapGraph {
  * @author Pepe Gallardo
  */
 class MapGraph[V] extends UndirectedUnweightedGraph[V] {
-  private var xs = List[Edge[V]]()
+  private val succs = mutable.Map[V, mutable.Set[V]]()
 
-  override def addVertex(vertex: V): Boolean = ???
+  override def addVertex(vertex: V): Boolean =
+    succs.get(vertex) match
+      case None => succs(vertex) = mutable.Set[V]()
+        true
+      case Some(_) => false
 
-  override def containsVertex(vertex: V): Boolean = ???
+  override def containsVertex(vertex: V): Boolean =
+    succs.isDefinedAt(vertex)
 
-  override def deleteVertex(vertex: V): Boolean = ???
+  override def deleteVertex(vertex: V): Boolean =
+    succs.get(vertex) match
+      case None => false
+      case Some(incidents) =>
+        succs.remove(vertex)
+        for (incident <- incidents)
+          succs(incident).remove(vertex)
+        true
 
-  override def vertices: immutable.Set[V] = ???
+  override def vertices: immutable.Set[V] =
+    var set = immutable.Set[V]()
+    for (vertex <- succs.keys)
+      set = set + vertex
+    set
 
-  override def order: Int = ???
+  override def order: Int =
+    succs.keys.size
 
+  override def addEdge(vertex1: V, vertex2: V): Boolean =
+    succs.get(vertex1) match
+      case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+      case Some(incidents1) => succs.get(vertex2) match
+        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+        case Some(incidents2) =>
+          val added = incidents1.add(vertex2)
+          incidents2.add(vertex1)
+          added
 
-  override def addEdge(vertex1: V, vertex2: V): Boolean = ???
+  override def addEdge(edge: Edge[V]): Unit =
+    addEdge(edge.vertex1, edge.vertex2)
 
-  override def addEdge(edge: Edge[V]): Unit = ???
+  override def containsEdge(vertex1: V, vertex2: V): Boolean =
+    succs.get(vertex1) match
+      case None => false
+      case Some(incidents) => incidents.contains(vertex2)
 
-  override def containsEdge(vertex1: V, vertex2: V): Boolean = ???
+  override def containsEdge(edge: Edge[V]): Boolean =
+    containsEdge(edge.vertex1, edge.vertex2)
 
-  override def containsEdge(edge: Edge[V]): Boolean = ???
+  override def deleteEdge(vertex1: V, vertex2: V): Boolean =
+    succs.get(vertex1) match
+      case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+      case Some(incidents1) => succs.get(vertex2) match
+        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+        case Some(incidents2) =>
+          val deleted = incidents1.remove(vertex2)
+          incidents2.remove(vertex1)
+          deleted
 
-  override def deleteEdge(vertex1: V, vertex2: V): Boolean = ???
+  override def deleteEdge(edge: Edge[V]): Unit =
+    deleteEdge(edge.vertex1, edge.vertex2)
 
-  override def deleteEdge(edge: Edge[V]): Unit = ???
+  override def edges[E[X] >: Edge[X]]: immutable.Set[E[V]] =
+    var set = immutable.Set[E[V]]()
+    for ((vertex1, incidents) <- succs)
+      for (vertex2 <- incidents)
+        set = set + Edge(vertex1, vertex2)
+    set
 
-  override def edges[E[X] >: Edge[X]]: immutable.Set[E[V]] = ???
+  override def size: Int =
+    var numEdges = 0
+    for (incidents <- succs.values)
+      numEdges += incidents.size
+    numEdges / 2
 
-  override def size: Int = ???
+  override def adjacents(vertex: V): immutable.Set[V] =
+    succs.get(vertex) match
+      case None => throw GraphException(s"adjacents: vertex $vertex is not in graph")
+      case Some(adjacents) =>
+        var set = immutable.Set[V]()
+        for (adjacent <- adjacents)
+          set = set + adjacent
+        set
 
+  override def incidents[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] =
+    succs.get(vertex) match
+      case None => throw GraphException(s"incidents: vertex $vertex is not in graph")
+      case Some(adjacents) =>
+        var set = immutable.Set[E[V]]()
+        for (adjacent <- adjacents)
+          set = set + Edge(vertex, adjacent)
+        set
 
-  override def adjacents(vertex: V): immutable.Set[V] = ???
+  override def incidentsFrom[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] =
+    succs.get(vertex) match
+      case None => throw GraphException(s"incidentsFrom: vertex $vertex is not in graph")
+      case Some(adjacents) =>
+        var set = immutable.Set[E[V]]()
+        for (adjacent <- adjacents)
+          set = set + Edge(vertex, adjacent)
+        set
 
-  override def incidents[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
+  override def incidentsTo[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] =
+    succs.get(vertex) match
+      case None => throw GraphException(s"incidentsTo: vertex $vertex is not in graph")
+      case Some(adjacents) =>
+        var set = immutable.Set[E[V]]()
+        for (adjacent <- adjacents)
+          set = set + Edge(adjacent, vertex)
+        set
 
-  override def incidentsFrom[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
-
-  override def incidentsTo[E[X] >: Edge[X]](vertex: V): immutable.Set[E[V]] = ???
-
-  override def degree(vertex: V): Int = ???
+  override def degree(vertex: V): Int =
+    succs.get(vertex) match
+      case None => throw GraphException(s"degree: vertex $vertex is not in graph")
+      case Some(incidents) => incidents.size
 }

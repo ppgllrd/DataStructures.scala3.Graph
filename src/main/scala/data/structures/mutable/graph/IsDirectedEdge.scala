@@ -11,3 +11,8 @@ trait IsDirectedEdge[+V] {
 
   def destination: V
 }
+
+object IsDirectedEdge {
+  def unapply[V, W](directedEdge: IsDirectedEdge[V]): (V, V) =
+    (directedEdge.source, directedEdge.destination)
+}

@@ -56,8 +56,8 @@ class Prim[V, W](undirectedWeightedGraph: UndirectedWeightedGraph[V, W])(using o
       minSpanningTree.addVertex(vertex)
 
       // add to priority queue edges incident to vertex
-      for (WeightedEdge(_, incident, weight) <- undirectedWeightedGraph.incidentsFrom(vertex))
-        priorityQueue.enqueue(WeightedEdge(vertex, incident, weight))
+      for (weightedEdge <- undirectedWeightedGraph.incidentsFrom(vertex))
+        priorityQueue.enqueue(weightedEdge)
 
       while (priorityQueue.nonEmpty && currentNumberOfEdges < finalNumberOfEdges)
         val weightedEdge@WeightedEdge(_, vertex, _) = priorityQueue.dequeue()
@@ -68,9 +68,9 @@ class Prim[V, W](undirectedWeightedGraph: UndirectedWeightedGraph[V, W])(using o
           minSpanningTree.addEdge(weightedEdge)
           currentNumberOfEdges += 1
 
-          // compute alternative costs for all vertices incident to this one which are not yet in spanning tree and put
-          // them in priority queue as they may improve previous known ones
-          for (WeightedEdge(_, incident, weight) <- undirectedWeightedGraph.incidentsFrom(vertex))
+          // compute alternative costs for all vertices incident from this one which are not yet in spanning tree and
+          // put them in priority queue as they may improve previous known ones
+          for (weightedEdge@WeightedEdge(_, incident, _) <- undirectedWeightedGraph.incidentsFrom(vertex))
             if (!minSpanningTree.containsVertex(incident))
-              priorityQueue.enqueue(WeightedEdge(vertex, incident, weight))
+              priorityQueue.enqueue(weightedEdge)
 

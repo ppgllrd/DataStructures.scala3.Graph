@@ -29,5 +29,5 @@ trait DirectedUnweightedGraph[V] extends DirectedGraph[V] with UnweightedGraph[V
    * @param directedEdge a directed unweighted edge to delete.
    * @return `true` if directed unweighted edge was in graph before.
    */
-  def deleteEdge(directedEdge: DirectedEdge[V]): Unit
+  def deleteEdge(directedEdge: DirectedEdge[V]): Boolean
 }

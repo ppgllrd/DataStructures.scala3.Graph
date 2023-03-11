@@ -40,7 +40,7 @@ class MapDirectedGraph[V] extends DirectedUnweightedGraph[V] {
 
   override def deleteEdge(source: V, destination: V): Boolean = ???
 
-  override def deleteEdge(directedEdge: DirectedEdge[V]): Unit = ???
+  override def deleteEdge(directedEdge: DirectedEdge[V]): Boolean = ???
 
   override def edges[Edge[X] >: DirectedEdge[X]]: immutable.Set[Edge[V]] = ???
 

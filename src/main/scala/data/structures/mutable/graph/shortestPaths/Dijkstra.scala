@@ -71,6 +71,8 @@ class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W], source: V)
           path = priorityQueue.map(withKey(path.head)).vertex :: path
         path
 
+  private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
+
   private def run(): Unit =
     // number of destination vertices for which we yet have to find its shortest path
     var numberOfDestinationsUnsolved = weightedGraph.order
@@ -115,8 +117,6 @@ class Dijkstra[V, W](weightedGraph: WeightedGraph[V, W], source: V)
                 // and record in map new best known solution for incident if relaxation was done
                 sourcesAndCosts(incidentLocator) = VertexAndCost(vertex, newCost)
               }
-
-  private def withKey(vertex: V) = VertexAndCost(vertex, null.asInstanceOf[W])
 
   private final case class VertexAndCost(vertex: V, cost: W):
     // note that equality only considers vertex in structure but not its cost

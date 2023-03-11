@@ -125,6 +125,25 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     }
   }
 
+  // a cell is occupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
+  inline def isOccupied(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
+    !isFree(array, hashTableIndex)
+
+  // searches for hashTableIndex of an element in the hash table
+  def searchHashTableIndexOf(key: T): Int = {
+    var hashTableIndex = hash(key)
+    while (isOccupied(hashTableIndex) && keys(hashTableIndex) != key) {
+      hashTableIndex = (hashTableIndex + 1) % keys.length
+    }
+    hashTableIndex
+  }
+
+  inline def isOccupied(inline hashTableIndex: Int): Boolean =
+    isOccupied(heapIndexes, hashTableIndex)
+
+  // computes current load factor of hash table
+  protected def loadFactor: Double = sz.toDouble / keys.length
+
   // performs rehashing if current load factor exceeds maximum allowed one
   private[heap] def rehashing(): Boolean = {
     var rehashed = false
@@ -149,25 +168,6 @@ private[heap] class HashTable[T](initialCapacity: Int)(using classTagT: ClassTag
     rehashed
   }
 
-  // a cell is occupied if it corresponds to an element in heap (heapIndexes > 0) or if it is reserved
-  inline def isOccupied(inline array: Array[Int], inline hashTableIndex: Int): Boolean =
-    !isFree(array, hashTableIndex)
-
-  // searches for hashTableIndex of an element in the hash table
-  def searchHashTableIndexOf(key: T): Int = {
-    var hashTableIndex = hash(key)
-    while (isOccupied(hashTableIndex) && keys(hashTableIndex) != key) {
-      hashTableIndex = (hashTableIndex + 1) % keys.length
-    }
-    hashTableIndex
-  }
-
-  inline def isOccupied(inline hashTableIndex: Int): Boolean =
-    isOccupied(heapIndexes, hashTableIndex)
-
   // computes hash of an element
   private def hash(key: T): Int = (key.hashCode() & 0x7fffffff) % keys.length
-
-  // computes current load factor of hash table
-  protected def loadFactor: Double = sz.toDouble / keys.length
 }

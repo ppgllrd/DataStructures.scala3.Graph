@@ -8,3 +8,8 @@ package data.structures.mutable.graph
  * @author Pepe Gallardo          
  */
 trait IsDirectedWeightedEdge[+V, +W] extends IsDirectedEdge[V] with IsWeighted[W]
+
+object IsDirectedWeightedEdge {
+  def unapply[V, W](directedWeightedEdge: IsDirectedWeightedEdge[V, W]): (V, V, W) =
+    (directedWeightedEdge.source, directedWeightedEdge.destination, directedWeightedEdge.weight)
+}

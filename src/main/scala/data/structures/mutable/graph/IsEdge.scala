@@ -11,3 +11,8 @@ trait IsEdge[+V] {
 
   def vertex2: V
 }
+
+object IsEdge {
+  def unapply[V](edge: IsEdge[V]): (V, V) =
+    (edge.vertex1, edge.vertex2)
+}

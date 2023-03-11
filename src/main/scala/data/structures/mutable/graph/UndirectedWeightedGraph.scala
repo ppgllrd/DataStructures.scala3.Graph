@@ -31,5 +31,5 @@ trait UndirectedWeightedGraph[V, W] extends UndirectedGraph[V] with Graph[V, [X]
    * @param weightedEdge undirected weighted edge to delete.
    * @return `true` if undirected weighted edge was in graph before.
    */
-  def deleteEdge(weightedEdge: WeightedEdge[V, W]): Unit
+  def deleteEdge(weightedEdge: WeightedEdge[V, W]): Boolean
 }

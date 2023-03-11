@@ -33,10 +33,10 @@ class MapGraph[V] extends UndirectedUnweightedGraph[V] {
   override def deleteVertex(vertex: V): Boolean =
     succs.get(vertex) match
       case None => false
-      case Some(incidents) =>
+      case Some(adjacents) =>
         succs.remove(vertex)
-        for (incident <- incidents)
-          succs(incident).remove(vertex)
+        for (adjacent <- adjacents)
+          succs(adjacent).remove(vertex)
         true
 
   override def vertices: immutable.Set[V] =
@@ -48,51 +48,51 @@ class MapGraph[V] extends UndirectedUnweightedGraph[V] {
   override def order: Int =
     succs.keys.size
 
-  override def addEdge(vertex1: V, vertex2: V): Boolean =
-    succs.get(vertex1) match
-      case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-      case Some(incidents1) => succs.get(vertex2) match
-        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-        case Some(incidents2) =>
-          val added = incidents1.add(vertex2)
-          incidents2.add(vertex1)
-          added
-
   override def addEdge(edge: Edge[V]): Unit =
     addEdge(edge.vertex1, edge.vertex2)
 
-  override def containsEdge(vertex1: V, vertex2: V): Boolean =
+  override def addEdge(vertex1: V, vertex2: V): Boolean =
     succs.get(vertex1) match
-      case None => false
-      case Some(incidents) => incidents.contains(vertex2)
+      case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+      case Some(adjacents1) => succs.get(vertex2) match
+        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+        case Some(adjacents2) =>
+          val added = adjacents1.add(vertex2)
+          adjacents2.add(vertex1)
+          added
 
   override def containsEdge(edge: Edge[V]): Boolean =
     containsEdge(edge.vertex1, edge.vertex2)
 
+  override def containsEdge(vertex1: V, vertex2: V): Boolean =
+    succs.get(vertex1) match
+      case None => false
+      case Some(adjacents) => adjacents.contains(vertex2)
+
+  override def deleteEdge(edge: Edge[V]): Boolean =
+    deleteEdge(edge.vertex1, edge.vertex2)
+
   override def deleteEdge(vertex1: V, vertex2: V): Boolean =
     succs.get(vertex1) match
-      case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-      case Some(incidents1) => succs.get(vertex2) match
-        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-        case Some(incidents2) =>
-          val deleted = incidents1.remove(vertex2)
-          incidents2.remove(vertex1)
+      case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
+      case Some(adjacents1) => succs.get(vertex2) match
+        case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
+        case Some(adjacents2) =>
+          val deleted = adjacents1.remove(vertex2)
+          adjacents2.remove(vertex1)
           deleted
-
-  override def deleteEdge(edge: Edge[V]): Unit =
-    deleteEdge(edge.vertex1, edge.vertex2)
 
   override def edges[E[X] >: Edge[X]]: immutable.Set[E[V]] =
     var set = immutable.Set[E[V]]()
-    for ((vertex1, incidents) <- succs)
-      for (vertex2 <- incidents)
+    for ((vertex1, adjacents) <- succs)
+      for (vertex2 <- adjacents)
         set = set + Edge(vertex1, vertex2)
     set
 
   override def size: Int =
     var numEdges = 0
-    for (incidents <- succs.values)
-      numEdges += incidents.size
+    for (adjacents <- succs.values)
+      numEdges += adjacents.size
     numEdges / 2
 
   override def adjacents(vertex: V): immutable.Set[V] =
@@ -134,5 +134,5 @@ class MapGraph[V] extends UndirectedUnweightedGraph[V] {
   override def degree(vertex: V): Int =
     succs.get(vertex) match
       case None => throw GraphException(s"degree: vertex $vertex is not in graph")
-      case Some(incidents) => incidents.size
+      case Some(adjacents) => adjacents.size
 }

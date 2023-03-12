@@ -69,7 +69,6 @@ import scala.io.Source
 
   assert(isMst1)
   assert(isMst2)
-
 }
 
 

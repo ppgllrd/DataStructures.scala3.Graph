@@ -55,10 +55,11 @@ class MapGraph[V] extends UndirectedUnweightedGraph[V] {
     succs.get(vertex1) match
       case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
       case Some(adjacents1) => succs.get(vertex2) match
-        case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
+        case None => throw GraphException(s"addEdge: vertex $vertex2 is not in graph")
         case Some(adjacents2) =>
           val added = adjacents1.add(vertex2)
-          adjacents2.add(vertex1)
+          if(added)
+            adjacents2.add(vertex1)
           added
 
   override def containsEdge(edge: Edge[V]): Boolean =
@@ -76,10 +77,11 @@ class MapGraph[V] extends UndirectedUnweightedGraph[V] {
     succs.get(vertex1) match
       case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
       case Some(adjacents1) => succs.get(vertex2) match
-        case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
+        case None => throw GraphException(s"deleteEdge: vertex $vertex2 is not in graph")
         case Some(adjacents2) =>
           val deleted = adjacents1.remove(vertex2)
-          adjacents2.remove(vertex1)
+          if (deleted)
+            adjacents2.remove(vertex1)
           deleted
 
   override def edges[E[X] >: Edge[X]]: immutable.Set[E[V]] =

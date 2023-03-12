@@ -6,27 +6,34 @@ import scala.collection.*
 
 
 @main def TestSubtypes(): Unit = {
-  val e = new Edge[Int](1, 2)
-  val we = new WeightedEdge[Int, Double](2, 3, 15.0)
+  val e = Edge[Int](1, 2)
+  val we = WeightedEdge[Int, Double](2, 3, 15.0)
 
-  val wedge: IsEdge[Int] with IsWeighted[Double] = new WeightedEdge(1, 2, 3.0)
+  val wedge: IsEdge[Int] with IsWeighted[Double] = WeightedEdge(1, 2, 3.0)
 
-  val g = new MapGraph[Int]
-  g.addEdge(new Edge(3, 4))
+  val g = MapGraph[Int]()
+  g.addVertex(2)
+  g.addVertex(3)
+  g.addVertex(4)
+  g.addVertex(7)
+  g.addEdge(Edge(3, 4))
   g.addEdge(2, 7)
 
-  val wg = new MapWeightedGraph[Int, Double]
-  wg.addEdge(new WeightedEdge(1, 2, 10.0))
+  val wg = MapWeightedGraph[Int, Double]()
+  wg.addVertex(1)
+  wg.addVertex(2)
+  wg.addVertex(7)
+  wg.addEdge(WeightedEdge(1, 2, 10.0))
   wg.addEdge(1, 7, 15.3)
 
   val g2: UndirectedGraph[Int] = wg
 
-  val dg = new MapDirectedGraph[Int]
-  dg.addEdge(new DirectedEdge(1, 2))
+  val dg = MapDirectedGraph[Int]()
+  dg.addEdge(DirectedEdge(1, 2))
   dg.addEdge(1, 6)
 
-  val dwg = new MapDirectedWeightedGraph[Int, Double]
-  dwg.addEdge(new DirectedWeightedEdge(1, 2, 5.6))
+  val dwg = MapDirectedWeightedGraph[Int, Double]()
+  dwg.addEdge(DirectedWeightedEdge(1, 2, 5.6))
   dwg.addEdge(3, 4, 7.7)
 
   println(wg.edges)

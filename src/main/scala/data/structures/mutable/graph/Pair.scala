@@ -9,8 +9,11 @@ package data.structures.mutable.graph
  * @tparam W type of weight.
  */
 private[graph] case class Pair[V, W](vertex: V, weight: W) {
-  // only successor component is used for determining if two Pairs are equal when
-  // one any of weights is null
+  def this(vertex: V) =
+    this(vertex, null.asInstanceOf[W])
+
+  // only vertex component is used for determining if two Pairs are equal when
+  // any of compared weights are null
   override def equals(other: Any): Boolean = other match {
     case that: Pair[?, ?] =>
       (that canEqual this) && vertex == that.vertex &&
@@ -20,10 +23,14 @@ private[graph] case class Pair[V, W](vertex: V, weight: W) {
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Pair[?, ?]]
 
-  // as equals only depends on successor so has to do hashCode
+  // as equals only depends on vertex so has to do hashCode
   override def hashCode(): Int = {
     vertex.hashCode()
   }
 
   override def toString: String = s"${getClass.getSimpleName}($vertex, $weight)"
+}
+
+object Pair {
+  def apply[V, W](vertex: V): Pair[V, W] = new Pair(vertex)
 }

@@ -38,7 +38,7 @@ class MapWeightedGraph[V, W] extends UndirectedWeightedGraph[V, W] {
       case Some(adjacents) =>
         succsAndWeights.remove(vertex)
         for (Pair(adjacent, _) <- adjacents)
-          succsAndWeights(adjacent).remove(Pair(vertex, null.asInstanceOf[W]))
+          succsAndWeights(adjacent).remove(Pair(vertex))
         true
 
   override def vertices: immutable.Set[V] =
@@ -56,21 +56,21 @@ class MapWeightedGraph[V, W] extends UndirectedWeightedGraph[V, W] {
   override def addEdge(vertex1: V, vertex2: V, weight: W): Boolean =
     succsAndWeights.get(vertex1) match
       case None => throw GraphException(s"addEdge: vertex $vertex1 is not in graph")
-      case Some(adjacents1) => succsAndWeights.get(vertex2) match
+      case Some(pairs1) => succsAndWeights.get(vertex2) match
         case None => throw GraphException(s"addEdge: vertex $vertex2 is not in graph")
-        case Some(adjacents2) =>
-          if (adjacents2.exists(_.vertex == vertex2))
-            // there must be a single edge connecting ant two vertices
-            adjacents1.filterInPlace(_.vertex == vertex2)
-            adjacents2.filterInPlace(_.vertex == vertex1)
-          val added = adjacents1.add(Pair(vertex2, weight))
-          adjacents2.add(Pair(vertex1, weight))
+        case Some(pairs2) =>
+          // there must be a single edge connecting any two vertices
+          val deleted = pairs1.remove(Pair(vertex2))
+          if (deleted)
+            pairs2.remove(Pair(vertex1))
+          val added = pairs1.add(Pair(vertex2, weight))
+          pairs2.add(Pair(vertex1, weight))
           added
 
   override def containsEdge(vertex1: V, vertex2: V): Boolean =
     succsAndWeights.get(vertex1) match
       case None => false
-      case Some(adjacents) => adjacents.contains(Pair(vertex2, null.asInstanceOf[W]))
+      case Some(pairs) => pairs.contains(Pair(vertex2))
 
   override def containsEdge(weightedEdge: WeightedEdge[V, W]): Boolean =
     containsEdge(weightedEdge.vertex1, weightedEdge.vertex2, weightedEdge.weight)
@@ -78,16 +78,16 @@ class MapWeightedGraph[V, W] extends UndirectedWeightedGraph[V, W] {
   override def containsEdge(vertex1: V, vertex2: V, weight: W): Boolean =
     succsAndWeights.get(vertex1) match
       case None => false
-      case Some(adjacents) => adjacents.contains(Pair(vertex2, weight))
+      case Some(pairs) => pairs.contains(Pair(vertex2, weight))
 
   override def deleteEdge(vertex1: V, vertex2: V): Boolean =
     succsAndWeights.get(vertex1) match
       case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
-      case Some(adjacents1) => succsAndWeights.get(vertex2) match
-        case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
-        case Some(adjacents2) =>
-          val deleted = adjacents1.remove(Pair(vertex2, null.asInstanceOf[W]))
-          adjacents2.remove(Pair(vertex1, null.asInstanceOf[W]))
+      case Some(pairs1) => succsAndWeights.get(vertex2) match
+        case None => throw GraphException(s"deleteEdge: vertex $vertex2 is not in graph")
+        case Some(pairs2) =>
+          val deleted = pairs1.remove(Pair(vertex2))
+          pairs2.remove(Pair(vertex1))
           deleted
 
   override def deleteEdge(weightedEdge: WeightedEdge[V, W]): Boolean =
@@ -96,11 +96,11 @@ class MapWeightedGraph[V, W] extends UndirectedWeightedGraph[V, W] {
   override def deleteEdge(vertex1: V, vertex2: V, weight: W): Boolean =
     succsAndWeights.get(vertex1) match
       case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
-      case Some(adjacents1) => succsAndWeights.get(vertex2) match
-        case None => throw GraphException(s"deleteEdge: vertex $vertex1 is not in graph")
-        case Some(adjacents2) =>
-          val deleted = adjacents1.remove(Pair(vertex2, weight))
-          adjacents2.remove(Pair(vertex1, weight))
+      case Some(pairs1) => succsAndWeights.get(vertex2) match
+        case None => throw GraphException(s"deleteEdge: vertex $vertex2 is not in graph")
+        case Some(pairs2) =>
+          val deleted = pairs1.remove(Pair(vertex2, weight))
+          pairs2.remove(Pair(vertex1, weight))
           deleted
 
   override def edges[Edge[X] >: WeightedEdge[X, W]]: immutable.Set[Edge[V]] =
@@ -119,7 +119,7 @@ class MapWeightedGraph[V, W] extends UndirectedWeightedGraph[V, W] {
   override def weightOfEdge(vertex1: V, vertex2: V): Option[W] =
     succsAndWeights.get(vertex1) match
       case None => None
-      case Some(adjacents) => adjacents.find(_.vertex == vertex2) match
+      case Some(pairs) => pairs.find(_.vertex == vertex2) match
         case None => None
         case Some(Pair(_, weight)) => Some(weight)
 

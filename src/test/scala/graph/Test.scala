@@ -20,7 +20,7 @@ object Test extends App {
 
   println(g.successors(3))
   println(g.vertices)
-  println(g.edges)
+  println(g.edges.toList.sorted)
   println(g.incidentsFrom(3))
   println(g.incidentsTo(3))
   val traversal = g.breadthFirstTraversal(1)

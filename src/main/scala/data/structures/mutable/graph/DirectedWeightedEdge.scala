@@ -44,4 +44,9 @@ object DirectedWeightedEdge {
 
   def unapply[V, W](directedWeightedEdge: DirectedWeightedEdge[V, W]): (V, V, W) =
     (directedWeightedEdge.source, directedWeightedEdge.destination, directedWeightedEdge.weight)
+
+  given directedWeightedEdgeOrdering[V, W](using Ordering[V], Ordering[W]): Ordering[DirectedWeightedEdge[V, W]] =
+    Ordering.by[DirectedWeightedEdge[V, W], V](_.vertex1) orElse
+      Ordering.by[DirectedWeightedEdge[V, W], V](_.vertex2) orElse
+      Ordering.by[DirectedWeightedEdge[V, W], W](_.weight)
 }

@@ -40,4 +40,8 @@ object DirectedEdge {
   def apply[V](source: V, destination: V): DirectedEdge[V] = new DirectedEdge[V](source, destination)
 
   def unapply[V](directedEdge: DirectedEdge[V]): (V, V) = (directedEdge.source, directedEdge.destination)
+
+  given directedEdgeOrdering[V](using Ordering[V]): Ordering[DirectedEdge[V]] =
+    Ordering.by[DirectedEdge[V], V](_.vertex1) orElse
+      Ordering.by[DirectedEdge[V], V](_.vertex2)
 }

@@ -37,4 +37,9 @@ object Edge {
   def apply[V](vertex1: V, vertex2: V): Edge[V] = new Edge[V](vertex1, vertex2)
 
   def unapply[V](edge: Edge[V]): (V, V) = (edge.vertex1, edge.vertex2)
+
+  given edgeOrdering[V](using Ordering[V]): Ordering[Edge[V]] =
+    Ordering.by[Edge[V], V](_.vertex1) orElse
+    Ordering.by[Edge[V], V](_.vertex2)
 }
+

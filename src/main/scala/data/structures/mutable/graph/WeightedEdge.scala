@@ -46,6 +46,11 @@ object WeightedEdge {
 
   def unapply[V, W](weightedEdge: WeightedEdge[V, W]): (V, V, W) =
     (weightedEdge.vertex1, weightedEdge.vertex2, weightedEdge.weight)
+
+  given weightedEdgeOrdering[V, W](using Ordering[V], Ordering[W]): Ordering[WeightedEdge[V, W]] =
+    Ordering.by[WeightedEdge[V, W], V](_.vertex1) orElse
+      Ordering.by[WeightedEdge[V, W], V](_.vertex2) orElse
+      Ordering.by[WeightedEdge[V, W], W](_.weight)
 }
 
 

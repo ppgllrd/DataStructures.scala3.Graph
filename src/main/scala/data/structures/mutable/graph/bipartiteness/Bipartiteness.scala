@@ -58,7 +58,6 @@ class Bipartiteness[V](undirectedGraph: UndirectedGraph[V]) {
         case Some(adjacentColor) =>
           if (adjacentColor == color)
             bipartite = false
-
     }
   }
 }

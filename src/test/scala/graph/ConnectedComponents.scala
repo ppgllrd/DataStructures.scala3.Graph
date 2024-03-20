@@ -11,9 +11,7 @@ import data.structures.mutable.graph.{MapGraph, MapWeightedGraph}
 
   g.addEdge(1, 2)
   g.addEdge(2, 3)
-
   g.addEdge(4, 5)
-
   g.addEdge(6, 7)
   g.addEdge(7, 8)
   g.addEdge(8, 9)
@@ -33,9 +31,7 @@ import data.structures.mutable.graph.{MapGraph, MapWeightedGraph}
 
   wg.addEdge(1, 2, 12.0)
   wg.addEdge(2, 3, 23.0)
-
   wg.addEdge(4, 5, 45.0)
-
   wg.addEdge(6, 7, 67.0)
   wg.addEdge(7, 8, 78.0)
   wg.addEdge(8, 9, 89.0)

@@ -12,14 +12,14 @@ trait Container[T]:
   /**
    * Checks if container is empty.
    *
-   * @return
+   * @return `true` if container is empty, `false` otherwise.
    */
   def isEmpty: Boolean
 
   /**
    * Checks if container is non empty.
    *
-   * @return
+   * @return `true` if container is non empty, `false` otherwise.
    */
   def nonEmpty: Boolean = !isEmpty
 

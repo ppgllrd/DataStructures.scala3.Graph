@@ -14,6 +14,7 @@ object ConnectedComponents {
         for (vertex <- vertices) {
           component.addVertex(vertex)
         }
+        
         for (vertex <- vertices) {
           for (edge <- undirectedUnweightedGraph.incidentsFrom(vertex)) {
             component.addEdge(edge)
@@ -32,6 +33,7 @@ object ConnectedComponents {
         for (vertex <- vertices) {
           component.addVertex(vertex)
         }
+        
         for (vertex <- vertices) {
           for (edge <- undirectedWeightedGraph.incidentsFrom(vertex)) {
             component.addEdge(edge)

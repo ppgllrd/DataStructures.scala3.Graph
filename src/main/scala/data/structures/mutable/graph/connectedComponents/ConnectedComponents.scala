@@ -1,4 +1,4 @@
-package data.structures.mutable.connectedComponents
+package data.structures.mutable.graph.connectedComponents
 
 import data.structures.mutable.graph.*
 

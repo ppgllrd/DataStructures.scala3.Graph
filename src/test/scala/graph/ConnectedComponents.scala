@@ -1,6 +1,6 @@
 package graph
 
-import data.structures.mutable.connectedComponents.ConnectedComponents
+import data.structures.mutable.graph.connectedComponents.ConnectedComponents
 import data.structures.mutable.graph.{MapGraph, MapWeightedGraph}
 
 
